@@ -4,9 +4,11 @@ import { CenterImpact } from "./scenes/CenterImpact";
 import { HighlighterSweep } from "./scenes/HighlighterSweep";
 import { WordCascade } from "./scenes/WordCascade";
 import { CyberScramble } from "./scenes/CyberScramble";
+import { DEFAULT_BACKGROUND, type BackgroundConfig } from "./backgrounds/types";
 
 export interface KineticCastProps extends Record<string, unknown> {
   scenes: Scene[];
+  background?: BackgroundConfig;
 }
 
 const SCENE_COMPONENTS = {
@@ -16,7 +18,7 @@ const SCENE_COMPONENTS = {
   "cyber-scramble": CyberScramble,
 } as const;
 
-function withStartFrames(scenes: Scene[]): Array<{ scene: Scene; from: number }> {
+export function withStartFrames(scenes: Scene[]): Array<{ scene: Scene; from: number }> {
   const result: Array<{ scene: Scene; from: number }> = [];
   for (let i = 0; i < scenes.length; i++) {
     const previous = result[i - 1];
@@ -26,7 +28,7 @@ function withStartFrames(scenes: Scene[]): Array<{ scene: Scene; from: number }>
   return result;
 }
 
-export function KineticCast({ scenes }: KineticCastProps) {
+export function KineticCast({ scenes, background = DEFAULT_BACKGROUND }: KineticCastProps) {
   const positionedScenes = withStartFrames(scenes);
 
   return (
@@ -40,6 +42,7 @@ export function KineticCast({ scenes }: KineticCastProps) {
               text={scene.text}
               stickers={scene.stickers}
               durationInFrames={scene.durationInFrames}
+              background={background}
             />
           </Sequence>
         );

@@ -1,49 +1,67 @@
-import type { Scene } from "@/lib/segmentation";
-import { STICKER_ICON_BY_CATEGORY } from "@/components/Video/icons";
+"use client";
 
-const LAYOUT_LABELS: Record<Scene["layout"], string> = {
-  "center-impact": "Center Impact",
-  "highlighter-sweep": "Highlighter Sweep",
-  "word-cascade": "Word Cascade",
-  "cyber-scramble": "Cyber Scramble",
-};
+import type { RefObject } from "react";
+import type { PlayerRef } from "@remotion/player";
+import type { Scene } from "@/lib/segmentation";
+import { withStartFrames } from "@/remotion/Composition";
+import { STICKER_ICON_BY_CATEGORY } from "@/components/Video/icons";
+import { LAYOUT_THEME } from "@/lib/layoutTheme";
+
+const PX_PER_SECOND = 56;
+const MIN_BLOCK_WIDTH = 120;
 
 interface ScenePlaylistProps {
   scenes: Scene[];
+  playerRef: RefObject<PlayerRef | null>;
 }
 
-export function ScenePlaylist({ scenes }: ScenePlaylistProps) {
+export function ScenePlaylist({ scenes, playerRef }: ScenePlaylistProps) {
   if (scenes.length === 0) {
-    return <p className="text-sm text-neutral-500">Enter a script to generate scenes.</p>;
+    return (
+      <div className="rounded-xl border border-border bg-surface p-4 text-sm text-muted">
+        Enter a script to generate scenes.
+      </div>
+    );
   }
 
+  const positioned = withStartFrames(scenes);
+
   return (
-    <ol className="flex flex-col gap-2">
-      {scenes.map((scene, index) => (
-        <li
-          key={scene.id}
-          className="flex items-start gap-3 border border-neutral-300 rounded-lg p-3"
-        >
-          <span className="text-sm font-semibold text-neutral-400 w-6">{index + 1}</span>
-          <div className="flex-1">
-            <p className="text-sm leading-relaxed">{scene.text}</p>
-            <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
-              <span>{LAYOUT_LABELS[scene.layout]}</span>
-              <span>{scene.durationSeconds.toFixed(2)}s</span>
-              <span>{scene.wordCount} words</span>
-              {scene.stickers.map((sticker) => {
-                const Icon = STICKER_ICON_BY_CATEGORY[sticker.category];
-                return (
-                  <span key={sticker.category} className="flex items-center gap-1">
-                    <Icon size={14} />
-                    {sticker.label}
-                  </span>
-                );
-              })}
-            </div>
-          </div>
-        </li>
-      ))}
-    </ol>
+    <div className="rounded-xl border border-border bg-surface p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-sm font-semibold">Timeline</h2>
+        <span className="text-xs text-muted">{scenes.length} scenes</span>
+      </div>
+
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {positioned.map(({ scene, from }, index) => {
+          const theme = LAYOUT_THEME[scene.layout];
+          const width = Math.max(MIN_BLOCK_WIDTH, scene.durationSeconds * PX_PER_SECOND);
+
+          return (
+            <button
+              key={scene.id}
+              type="button"
+              onClick={() => playerRef.current?.seekTo(from)}
+              style={{ width, minWidth: width }}
+              className={`flex flex-shrink-0 flex-col items-start gap-1 rounded-lg border px-3 py-2 text-left transition-colors hover:brightness-110 ${theme.chipClass}`}
+            >
+              <div className="flex w-full items-center justify-between text-xs opacity-80">
+                <span>#{index + 1}</span>
+                <span className="tabular-nums">{scene.durationSeconds.toFixed(1)}s</span>
+              </div>
+              <p className="line-clamp-2 text-xs leading-snug text-foreground">{scene.text}</p>
+              <div className="flex items-center gap-1 text-xs opacity-80">
+                {scene.stickers.map((sticker) => {
+                  const Icon = STICKER_ICON_BY_CATEGORY[sticker.category];
+                  return <Icon key={sticker.category} size={12} />;
+                })}
+                <span>{theme.label}</span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }

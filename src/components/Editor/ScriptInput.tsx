@@ -19,20 +19,28 @@ export function ScriptInput({
   onWpmChange,
 }: ScriptInputProps) {
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap gap-2">
-        {PRESETS.map((preset) => (
-          <motion.button
-            key={preset.id}
-            type="button"
-            onClick={() => onScriptChange(preset.script)}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="px-3 py-1.5 text-sm border-2 border-black rounded-full hover:bg-black hover:text-white transition-colors"
-          >
-            {preset.title}
-          </motion.button>
-        ))}
+    <div className="flex flex-col gap-5 rounded-xl border border-border bg-surface p-4">
+      <div>
+        <h2 className="text-sm font-semibold">Script</h2>
+        <p className="text-xs text-muted mt-0.5">Khmer text, broken into scenes automatically.</p>
+      </div>
+
+      <div>
+        <p className="text-xs font-medium text-muted mb-2">Presets</p>
+        <div className="flex flex-wrap gap-2">
+          {PRESETS.map((preset) => (
+            <motion.button
+              key={preset.id}
+              type="button"
+              onClick={() => onScriptChange(preset.script)}
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.96 }}
+              className="rounded-full border border-border bg-surface-raised px-3 py-1.5 text-sm text-foreground transition-colors hover:border-accent hover:text-accent"
+            >
+              {preset.title}
+            </motion.button>
+          ))}
+        </div>
       </div>
 
       <textarea
@@ -40,10 +48,10 @@ export function ScriptInput({
         onChange={(event) => onScriptChange(event.target.value)}
         placeholder="សរសេរអត្ថបទខ្មែររបស់អ្នកនៅទីនេះ..."
         rows={10}
-        className="w-full resize-none border-2 border-black rounded-lg p-4 font-[family-name:var(--font-kantumruy-pro)] text-lg leading-relaxed focus:outline-none focus:ring-2 focus:ring-black"
+        className="w-full resize-none rounded-lg border border-border bg-surface-raised p-4 font-[family-name:var(--font-kantumruy-pro)] text-lg leading-relaxed text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent"
       />
 
-      <div className="flex items-center justify-between text-sm text-neutral-700">
+      <div className="flex items-center justify-between rounded-lg border border-border bg-surface-raised px-3 py-2 text-xs text-muted">
         <span>{wordCount} words</span>
 
         <label className="flex items-center gap-2">
@@ -55,9 +63,9 @@ export function ScriptInput({
             step={5}
             value={wpm}
             onChange={(event) => onWpmChange(Number(event.target.value))}
-            className="accent-black"
+            className="accent-accent"
           />
-          <span className="w-16 text-right">{wpm} wpm</span>
+          <span className="w-16 text-right tabular-nums">{wpm} wpm</span>
         </label>
       </div>
     </div>

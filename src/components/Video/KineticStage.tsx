@@ -3,6 +3,7 @@
 import { Player, type PlayerRef } from "@remotion/player";
 import { KineticCast } from "@/remotion/Composition";
 import type { Scene } from "@/lib/segmentation";
+import type { BackgroundConfig } from "@/remotion/backgrounds/types";
 
 export type AspectRatio = "16:9" | "9:16";
 
@@ -15,6 +16,7 @@ interface KineticStageProps {
   scenes: Scene[];
   totalDurationInFrames: number;
   aspectRatio: AspectRatio;
+  background: BackgroundConfig;
   playerRef: React.RefObject<PlayerRef | null>;
 }
 
@@ -22,16 +24,17 @@ export function KineticStage({
   scenes,
   totalDurationInFrames,
   aspectRatio,
+  background,
   playerRef,
 }: KineticStageProps) {
   const { width, height } = DIMENSIONS[aspectRatio];
 
   return (
-    <div className="w-full max-w-3xl mx-auto border-2 border-black">
+    <div className="w-full mx-auto rounded-lg overflow-hidden border border-border bg-black">
       <Player
         ref={playerRef}
         component={KineticCast}
-        inputProps={{ scenes }}
+        inputProps={{ scenes, background }}
         durationInFrames={Math.max(1, totalDurationInFrames)}
         fps={30}
         compositionWidth={width}

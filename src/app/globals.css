@@ -1,15 +1,30 @@
 @import "tailwindcss";
 
+/*
+ * This theme is for the editor app's chrome only (nav, panels, timeline).
+ * The actual rendered Khmer video stays strict black/white per spec —
+ * see src/remotion/scenes/*.tsx, which are untouched by this file.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #000000;
-  --neutral: #737373;
+  --background: #0b0b0d;
+  --surface: #17171a;
+  --surface-raised: #1f1f23;
+  --border: #2a2a2f;
+  --foreground: #f2f2f3;
+  --muted: #8d8d93;
+  --accent: #f1591f;
+  --accent-foreground: #0b0b0d;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-border: var(--border);
   --color-foreground: var(--foreground);
-  --color-neutral: var(--neutral);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
   --font-moul: var(--font-moul);
   --font-battambang: var(--font-battambang);
   --font-kantumruy-pro: var(--font-kantumruy-pro);

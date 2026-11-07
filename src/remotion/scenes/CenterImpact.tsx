@@ -1,9 +1,10 @@
 import { interpolate, spring, useCurrentFrame, useVideoConfig, AbsoluteFill } from "remotion";
 import { StickerBadge } from "@/components/Video/StickerBadge";
+import { SceneBackground } from "@/remotion/backgrounds/SceneBackground";
 import { moulFontFamily } from "../fonts";
 import type { SceneProps } from "./types";
 
-export function CenterImpact({ text, stickers }: SceneProps) {
+export function CenterImpact({ text, stickers, background }: SceneProps) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -18,6 +19,7 @@ export function CenterImpact({ text, stickers }: SceneProps) {
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#FFFFFF" }}>
+      <SceneBackground {...background} />
       {stickers.map((sticker, i) => (
         <StickerBadge key={sticker.category} sticker={sticker} index={i} />
       ))}
