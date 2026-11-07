@@ -7,6 +7,7 @@ import {
   secondsToFrames,
 } from "./pacingEngine";
 import { matchStickers, type StickerMatch } from "./stickerMatcher";
+import type { BackgroundConfig } from "@/remotion/backgrounds/types";
 
 export interface Scene {
   id: string;
@@ -16,6 +17,14 @@ export interface Scene {
   durationInFrames: number;
   stickers: StickerMatch[];
   layout: SceneLayout;
+  backgroundColor?: string;
+  textColor?: string;
+  lineHeight?: number;
+  fontSize?: number;
+  positionX?: number;
+  positionY?: number;
+  textAlign?: "left" | "center" | "right";
+  background?: BackgroundConfig;
 }
 
 export type SceneLayout =
@@ -24,27 +33,18 @@ export type SceneLayout =
   | "word-cascade"
   | "cyber-scramble";
 
-const LAYOUT_CYCLE: SceneLayout[] = [
+export const LAYOUT_CYCLE: SceneLayout[] = [
   "center-impact",
   "highlighter-sweep",
   "word-cascade",
   "cyber-scramble",
 ];
 
-const SENTENCE_DELIMITERS = new RegExp(`([${FULL_STOP}${PHRASE_PAUSE}.!?])`, "g");
-
 function splitIntoSentences(script: string): string[] {
   return script
-    .split(SENTENCE_DELIMITERS)
-    .reduce<string[]>((sentences, chunk, index, parts) => {
-      if (index % 2 === 0) {
-        const delimiter = parts[index + 1] ?? "";
-        const sentence = `${chunk}${delimiter}`.trim();
-        if (sentence) sentences.push(sentence);
-      }
-      return sentences;
-    }, [])
-    .filter(Boolean);
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
 }
 
 function countWords(sentence: string): number {

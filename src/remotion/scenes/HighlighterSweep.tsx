@@ -1,11 +1,22 @@
 import { interpolate, useCurrentFrame, AbsoluteFill } from "remotion";
 import { StickerBadge } from "@/components/Video/StickerBadge";
+import { SceneBackground } from "@/remotion/backgrounds/SceneBackground";
 import { battambangFontFamily } from "../fonts";
 import type { SceneProps } from "./types";
+import { isColorDark } from "@/lib/colorUtils";
 
-// A white bar with mix-blend-mode "difference" swept over white-on-black
-// text optically inverts the text to black wherever the bar overlaps it.
-export function HighlighterSweep({ text, stickers }: SceneProps) {
+export function HighlighterSweep({
+  text,
+  stickers,
+  background,
+  backgroundColor,
+  textColor,
+  lineHeight = 1.35,
+  fontSize = 76,
+  positionX = 0,
+  positionY = 0,
+  textAlign = "center",
+}: SceneProps) {
   const frame = useCurrentFrame();
 
   const sweepX = interpolate(frame, [6, 34], [-30, 130], {
@@ -13,22 +24,35 @@ export function HighlighterSweep({ text, stickers }: SceneProps) {
     extrapolateRight: "clamp",
   });
 
+  const effectiveBg = backgroundColor ?? "#000000";
+  const effectiveText = textColor ?? (isColorDark(effectiveBg) ? "#FFFFFF" : "#000000");
+
   return (
-    <AbsoluteFill style={{ backgroundColor: "#000000" }}>
+    <AbsoluteFill style={{ backgroundColor: effectiveBg }}>
+      <SceneBackground {...background} isDark={isColorDark(effectiveBg)} />
       {stickers.map((sticker, i) => (
         <StickerBadge key={sticker.category} sticker={sticker} index={i} />
       ))}
-      <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", padding: 120 }}>
+      <AbsoluteFill
+        style={{
+          alignItems: textAlign === "left" ? "flex-start" : textAlign === "right" ? "flex-end" : "center",
+          justifyContent: "center",
+          padding: 120,
+          transform: `translate(${positionX}px, ${positionY}px)`,
+        }}
+      >
         <div
           style={{
             position: "relative",
             fontFamily: battambangFontFamily,
             fontWeight: 700,
-            fontSize: 76,
-            textAlign: "center",
-            lineHeight: 1.35,
-            color: "#FFFFFF",
+            fontSize,
+            textAlign,
+            lineHeight,
+            color: effectiveText,
             overflow: "hidden",
+            maxWidth: "90%",
+            wordBreak: "break-word",
           }}
         >
           {text}
@@ -39,7 +63,7 @@ export function HighlighterSweep({ text, stickers }: SceneProps) {
               bottom: 0,
               left: `${sweepX - 35}%`,
               width: "35%",
-              backgroundColor: "#FFFFFF",
+              backgroundColor: effectiveText,
               mixBlendMode: "difference",
             }}
           />

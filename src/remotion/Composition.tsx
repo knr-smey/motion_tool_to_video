@@ -32,9 +32,10 @@ export function KineticCast({ scenes, background = DEFAULT_BACKGROUND }: Kinetic
   const positionedScenes = withStartFrames(scenes);
 
   return (
-    <AbsoluteFill style={{ backgroundColor: "#FFFFFF" }}>
+    <AbsoluteFill style={{ backgroundColor: "#000000" }}>
       {positionedScenes.map(({ scene, from }) => {
-        const SceneComponent = SCENE_COMPONENTS[scene.layout];
+        const SceneComponent = SCENE_COMPONENTS[scene.layout] ?? CenterImpact;
+        const effectiveBackground = scene.background ?? background;
 
         return (
           <Sequence key={scene.id} from={from} durationInFrames={scene.durationInFrames}>
@@ -42,7 +43,14 @@ export function KineticCast({ scenes, background = DEFAULT_BACKGROUND }: Kinetic
               text={scene.text}
               stickers={scene.stickers}
               durationInFrames={scene.durationInFrames}
-              background={background}
+              background={effectiveBackground}
+              backgroundColor={scene.backgroundColor}
+              textColor={scene.textColor}
+              lineHeight={scene.lineHeight}
+              fontSize={scene.fontSize}
+              positionX={scene.positionX}
+              positionY={scene.positionY}
+              textAlign={scene.textAlign}
             />
           </Sequence>
         );

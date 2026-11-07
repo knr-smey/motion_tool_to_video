@@ -6,4 +6,11 @@ export interface SceneProps {
   stickers: StickerMatch[];
   durationInFrames: number;
   background: BackgroundConfig;
+  backgroundColor?: string;
+  textColor?: string;
+  lineHeight?: number;
+  fontSize?: number;
+  positionX?: number;
+  positionY?: number;
+  textAlign?: "left" | "center" | "right";
 }

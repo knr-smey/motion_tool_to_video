@@ -1,14 +1,14 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type { PlayerRef } from "@remotion/player";
 import { Topbar } from "@/components/Topbar";
-import { ScriptInput } from "@/components/Editor/ScriptInput";
-import { BackgroundPicker } from "@/components/Editor/BackgroundPicker";
+import { ScriptPanel } from "@/components/Editor/ScriptPanel";
+import { EditPanel } from "@/components/Editor/EditPanel";
 import { ScenePlaylist } from "@/components/Editor/ScenePlaylist";
 import { PlayerDeck } from "@/components/Video/PlayerDeck";
-import { buildScenes } from "@/lib/segmentation";
-import { getTotalDurationInFrames } from "@/remotion/Composition";
+import { buildScenes, type Scene } from "@/lib/segmentation";
+import { getTotalDurationInFrames, withStartFrames } from "@/remotion/Composition";
 import { DEFAULT_PRESET_ID, PRESETS } from "@/lib/presets";
 import { DEFAULT_BACKGROUND, type BackgroundConfig } from "@/remotion/backgrounds/types";
 
@@ -19,45 +19,144 @@ export function Workspace() {
   const [script, setScript] = useState(defaultScript);
   const [wpm, setWpm] = useState(145);
   const [background, setBackground] = useState<BackgroundConfig>(DEFAULT_BACKGROUND);
+  const [activeSceneIndex, setActiveSceneIndex] = useState(0);
+  const [sceneOverrides, setSceneOverrides] = useState<Record<number, Partial<Scene>>>({});
+
   const playerRef = useRef<PlayerRef>(null);
 
-  const scenes = useMemo(() => buildScenes(script, { wpm, fps: FPS }), [script, wpm]);
+  // Generate base scenes segmented from script text
+  const baseScenes = useMemo(() => buildScenes(script, { wpm, fps: FPS }), [script, wpm]);
+
+  // Merge base scenes with any scene-specific customizations
+  const scenes = useMemo(() => {
+    return baseScenes.map((baseScene, index) => {
+      const override = sceneOverrides[index];
+      if (!override) return baseScene;
+      return { ...baseScene, ...override };
+    });
+  }, [baseScenes, sceneOverrides]);
+
   const totalDurationInFrames = useMemo(() => getTotalDurationInFrames(scenes), [scenes]);
   const wordCount = useMemo(
     () => scenes.reduce((total, scene) => total + scene.wordCount, 0),
     [scenes]
   );
 
+  // Safe active scene index clamping
+  const safeActiveIndex = Math.min(
+    Math.max(0, activeSceneIndex),
+    Math.max(0, scenes.length - 1)
+  );
+
+  const handleSelectScene = useCallback(
+    (index: number) => {
+      setActiveSceneIndex(index);
+      const positioned = withStartFrames(scenes);
+      const target = positioned[index];
+      if (target && playerRef.current) {
+        playerRef.current.seekTo(target.from);
+      }
+    },
+    [scenes]
+  );
+
+  const handleUpdateScene = useCallback((index: number, updates: Partial<Scene>) => {
+    setSceneOverrides((prev) => ({
+      ...prev,
+      [index]: {
+        ...prev[index],
+        ...updates,
+      },
+    }));
+  }, []);
+
+  const handleUpdatePosition = useCallback(
+    (x: number, y: number) => {
+      handleUpdateScene(safeActiveIndex, { positionX: x, positionY: y });
+    },
+    [handleUpdateScene, safeActiveIndex]
+  );
+
+  const handleApplyToAllScenes = useCallback(
+    (templateScene: Scene) => {
+      const newOverrides: Record<number, Partial<Scene>> = {};
+      baseScenes.forEach((_, idx) => {
+        newOverrides[idx] = {
+          layout: templateScene.layout,
+          backgroundColor: templateScene.backgroundColor,
+          textColor: templateScene.textColor,
+          lineHeight: templateScene.lineHeight,
+          fontSize: templateScene.fontSize,
+          positionX: templateScene.positionX,
+          positionY: templateScene.positionY,
+          textAlign: templateScene.textAlign,
+          background: templateScene.background,
+        };
+      });
+      setSceneOverrides(newOverrides);
+    },
+    [baseScenes]
+  );
+
+  const handleResetScene = useCallback((index: number) => {
+    setSceneOverrides((prev) => {
+      const copy = { ...prev };
+      delete copy[index];
+      return copy;
+    });
+  }, []);
+
   return (
-    <div className="flex h-screen flex-col bg-background text-foreground">
+    <div className="flex h-screen flex-col bg-background text-foreground overflow-hidden">
       <Topbar />
 
       <div className="flex flex-1 overflow-hidden">
-        <aside className="w-[380px] shrink-0 overflow-y-auto border-r border-border p-4 flex flex-col gap-4">
-          <ScriptInput
+        {/* LEFT PANEL: Script Panel */}
+        <aside className="w-[360px] xl:w-[400px] shrink-0 overflow-y-auto border-r border-border bg-surface/30">
+          <ScriptPanel
             script={script}
             wordCount={wordCount}
             wpm={wpm}
+            scenes={scenes}
+            activeSceneIndex={safeActiveIndex}
             onScriptChange={setScript}
             onWpmChange={setWpm}
+            onSelectScene={handleSelectScene}
           />
-          <BackgroundPicker value={background} onChange={setBackground} />
         </aside>
 
-        <main className="flex flex-1 items-center justify-center overflow-auto p-8">
+        {/* CENTER PANEL: Stage Deck & Timeline */}
+        <main className="flex flex-1 flex-col overflow-y-auto p-4 xl:p-6 gap-4 items-center justify-start bg-background/60">
           <PlayerDeck
             scenes={scenes}
             totalDurationInFrames={totalDurationInFrames}
             fps={FPS}
             background={background}
             playerRef={playerRef}
+            activeSceneIndex={safeActiveIndex}
+            onUpdatePosition={handleUpdatePosition}
+          />
+
+          <ScenePlaylist
+            scenes={scenes}
+            playerRef={playerRef}
+            activeSceneIndex={safeActiveIndex}
+            onSelectScene={handleSelectScene}
           />
         </main>
-      </div>
 
-      <footer className="shrink-0 border-t border-border p-4">
-        <ScenePlaylist scenes={scenes} playerRef={playerRef} />
-      </footer>
+        {/* RIGHT PANEL: Edit Panel */}
+        <aside className="w-[380px] xl:w-[420px] shrink-0 overflow-y-auto border-l border-border bg-surface/30">
+          <EditPanel
+            scenes={scenes}
+            activeSceneIndex={safeActiveIndex}
+            onSelectScene={handleSelectScene}
+            onUpdateScene={handleUpdateScene}
+            onApplyToAllScenes={handleApplyToAllScenes}
+            onResetScene={handleResetScene}
+          />
+        </aside>
+      </div>
     </div>
   );
 }

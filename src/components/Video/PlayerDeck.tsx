@@ -2,7 +2,14 @@
 
 import { useCallback, useEffect, useState, type RefObject } from "react";
 import type { PlayerRef } from "@remotion/player";
-import { Pause, Play, RectangleHorizontal, RectangleVertical, RotateCcw } from "lucide-react";
+import {
+  Pause,
+  Play,
+  RectangleHorizontal,
+  RectangleVertical,
+  RotateCcw,
+  Move,
+} from "lucide-react";
 import { KineticStage, type AspectRatio } from "./KineticStage";
 import type { Scene } from "@/lib/segmentation";
 import type { BackgroundConfig } from "@/remotion/backgrounds/types";
@@ -13,6 +20,8 @@ interface PlayerDeckProps {
   fps: number;
   background: BackgroundConfig;
   playerRef: RefObject<PlayerRef | null>;
+  activeSceneIndex?: number;
+  onUpdatePosition?: (x: number, y: number) => void;
 }
 
 function formatTime(frame: number, fps: number): string {
@@ -29,10 +38,13 @@ export function PlayerDeck({
   fps,
   background,
   playerRef,
+  activeSceneIndex = 0,
+  onUpdatePosition,
 }: PlayerDeckProps) {
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("16:9");
   const [isPlaying, setIsPlaying] = useState(false);
   const [frame, setFrame] = useState(0);
+  const [showGuide, setShowGuide] = useState(true);
 
   useEffect(() => {
     const player = playerRef.current;
@@ -72,28 +84,35 @@ export function PlayerDeck({
   );
 
   return (
-    <div className="flex w-full max-w-3xl flex-col gap-3 rounded-xl border border-border bg-surface p-4">
+    <div className="flex w-full max-w-4xl flex-col gap-3 rounded-xl border border-border bg-surface p-4 shadow-sm">
       <KineticStage
         scenes={scenes}
         totalDurationInFrames={totalDurationInFrames}
         aspectRatio={aspectRatio}
         background={background}
         playerRef={playerRef}
+        activeSceneIndex={activeSceneIndex}
+        onUpdatePosition={onUpdatePosition}
+        showGuide={showGuide}
       />
 
+      {/* Scrubber & Time code */}
       <div className="flex items-center gap-3 text-xs text-muted">
-        <span className="tabular-nums">{formatTime(frame, fps)}</span>
+        <span className="tabular-nums font-mono">{formatTime(frame, fps)}</span>
         <input
           type="range"
           min={0}
           max={Math.max(1, totalDurationInFrames - 1)}
           value={frame}
           onChange={scrub}
-          className="h-1 flex-1 accent-accent"
+          className="h-1 flex-1 accent-accent cursor-pointer"
         />
-        <span className="tabular-nums">{formatTime(totalDurationInFrames, fps)}</span>
+        <span className="tabular-nums font-mono">
+          {formatTime(totalDurationInFrames, fps)}
+        </span>
       </div>
 
+      {/* Control bar */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button
@@ -101,6 +120,7 @@ export function PlayerDeck({
             onClick={restart}
             className="rounded-full p-2 text-foreground transition-colors hover:bg-surface-raised"
             aria-label="Restart"
+            title="Restart to beginning"
           >
             <RotateCcw size={18} />
           </button>
@@ -108,13 +128,30 @@ export function PlayerDeck({
           <button
             type="button"
             onClick={togglePlay}
-            className="rounded-full bg-accent p-2 text-accent-foreground transition-opacity hover:opacity-90"
+            className="rounded-full bg-accent p-2 text-accent-foreground transition-opacity hover:opacity-90 shadow"
             aria-label={isPlaying ? "Pause" : "Play"}
+            title={isPlaying ? "Pause" : "Play"}
           >
             {isPlaying ? <Pause size={18} /> : <Play size={18} />}
           </button>
+
+          {/* Canvas Drag Handle Toggle */}
+          <button
+            type="button"
+            onClick={() => setShowGuide(!showGuide)}
+            className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition ${
+              showGuide
+                ? "bg-accent/15 text-accent border border-accent/40"
+                : "text-muted hover:text-foreground hover:bg-surface-raised border border-border"
+            }`}
+            title="Toggle on-canvas drag handle"
+          >
+            <Move size={13} />
+            <span>Drag Handle {showGuide ? "On" : "Off"}</span>
+          </button>
         </div>
 
+        {/* Aspect Ratio Toggles */}
         <div className="flex overflow-hidden rounded-full border border-border">
           <button
             type="button"
@@ -125,6 +162,7 @@ export function PlayerDeck({
                 : "text-muted hover:bg-surface-raised"
             }`}
             aria-label="16:9 landscape"
+            title="Landscape (16:9)"
           >
             <RectangleHorizontal size={18} />
           </button>
@@ -137,6 +175,7 @@ export function PlayerDeck({
                 : "text-muted hover:bg-surface-raised"
             }`}
             aria-label="9:16 portrait"
+            title="Portrait (9:16)"
           >
             <RectangleVertical size={18} />
           </button>

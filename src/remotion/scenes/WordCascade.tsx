@@ -3,6 +3,7 @@ import { StickerBadge } from "@/components/Video/StickerBadge";
 import { SceneBackground } from "@/remotion/backgrounds/SceneBackground";
 import { kantumruyProFontFamily } from "../fonts";
 import type { SceneProps } from "./types";
+import { isColorDark } from "@/lib/colorUtils";
 
 const STAGGER_SECONDS = 0.08;
 
@@ -16,14 +17,35 @@ function splitTokens(text: string): string[] {
   return text.split(/\s+/).filter(Boolean);
 }
 
-export function WordCascade({ text, stickers, background }: SceneProps) {
+export function WordCascade({
+  text,
+  stickers,
+  background,
+  backgroundColor,
+  textColor,
+  lineHeight = 1.3,
+  fontSize = 62,
+  positionX = 0,
+  positionY = 0,
+  textAlign = "center",
+}: SceneProps) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const tokens = splitTokens(text);
 
+  const effectiveBg = backgroundColor ?? "#FFFFFF";
+  const effectiveText = textColor ?? (isColorDark(effectiveBg) ? "#FFFFFF" : "#000000");
+
+  const justifyStyle =
+    textAlign === "left"
+      ? "flex-start"
+      : textAlign === "right"
+      ? "flex-end"
+      : "center";
+
   return (
-    <AbsoluteFill style={{ backgroundColor: "#FFFFFF" }}>
-      <SceneBackground {...background} />
+    <AbsoluteFill style={{ backgroundColor: effectiveBg }}>
+      <SceneBackground {...background} isDark={isColorDark(effectiveBg)} />
       {stickers.map((sticker, i) => (
         <StickerBadge key={sticker.category} sticker={sticker} index={i} />
       ))}
@@ -31,11 +53,12 @@ export function WordCascade({ text, stickers, background }: SceneProps) {
         style={{
           flexDirection: "row",
           flexWrap: "wrap",
-          alignItems: "flex-start",
-          justifyContent: "center",
+          alignItems: "center",
+          justifyContent: justifyStyle,
           alignContent: "center",
           padding: 140,
           gap: "0.3em",
+          transform: `translate(${positionX}px, ${positionY}px)`,
         }}
       >
         {tokens.map((token, i) => {
@@ -54,8 +77,9 @@ export function WordCascade({ text, stickers, background }: SceneProps) {
               style={{
                 fontFamily: kantumruyProFontFamily,
                 fontWeight: 600,
-                fontSize: 62,
-                color: "#000000",
+                fontSize,
+                lineHeight,
+                color: effectiveText,
                 transform: `translateY(${translateY}px)`,
                 opacity: progress,
               }}

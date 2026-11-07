@@ -3,8 +3,6 @@ import { useCurrentFrame } from "remotion";
 
 const PARTICLE_COUNT = 70;
 
-// Deterministic pseudo-random in [0, 1), keyed by seed — avoids Math.random,
-// which would flicker between server and client / repeated renders.
 function seededRandom(seed: number): number {
   const x = Math.sin(seed * 12.9898) * 43758.5453;
   return x - Math.floor(x);
@@ -17,7 +15,11 @@ interface Particle {
   phase: number;
 }
 
-export function GalaxyBackground() {
+interface GalaxyBackgroundProps {
+  isDark?: boolean;
+}
+
+export function GalaxyBackground({ isDark = false }: GalaxyBackgroundProps) {
   const frame = useCurrentFrame();
 
   const particles = useMemo<Particle[]>(
@@ -30,6 +32,8 @@ export function GalaxyBackground() {
       })),
     []
   );
+
+  const starColor = isDark ? "#FFFFFF" : "#000000";
 
   return (
     <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
@@ -47,8 +51,8 @@ export function GalaxyBackground() {
               width: particle.size,
               height: particle.size,
               borderRadius: "50%",
-              backgroundColor: "#000000",
-              opacity: 0.08 + twinkle * 0.18,
+              backgroundColor: starColor,
+              opacity: (isDark ? 0.15 : 0.08) + twinkle * (isDark ? 0.35 : 0.18),
               transform: `translateY(${drift}px)`,
             }}
           />
