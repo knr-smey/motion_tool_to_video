@@ -27,54 +27,149 @@ export interface EditPanelProps {
   activeSceneIndex: number;
   onSelectScene: (index: number) => void;
   onUpdateScene: (index: number, updates: Partial<Scene>) => void;
-  onApplyToAllScenes: (templateScene: Scene) => void;
+  onApplyToAllScenes: (updates: Partial<Scene>) => void;
   onResetScene: (index: number) => void;
   onOpenRecordModal?: (index: number) => void;
 }
 
-const ANIMATION_OPTIONS: {
+interface TextAnimationOption {
   id: SceneLayout;
   title: string;
-  badge: string;
-  desc: string;
-  icon: string;
-}[] = [
+  previewClass: string;
+  previewType: "pop" | "rise" | "pan" | "breathe" | "sweep" | "cascade" | "scramble" | "typewriter" | "nodes" | "none";
+}
+
+const TEXT_ANIMATIONS: TextAnimationOption[] = [
   {
-    id: "node-connector",
-    title: "Node Flow",
-    badge: "Tech / API",
-    desc: "Animated point-to-point lines & data packet flow",
-    icon: "🔗",
+    id: "static-clean",
+    title: "None",
+    previewClass: "",
+    previewType: "none",
+  },
+  {
+    id: "fade-rise",
+    title: "Fade",
+    previewClass: "anim-hover-rise",
+    previewType: "rise",
+  },
+  {
+    id: "pan-slide",
+    title: "Pan",
+    previewClass: "anim-hover-pan",
+    previewType: "pan",
   },
   {
     id: "center-impact",
-    title: "Center Impact",
-    badge: "Punchy",
-    desc: "Spring explosive scale & punch with overshoot",
-    icon: "💥",
+    title: "Pop",
+    previewClass: "anim-hover-pop",
+    previewType: "pop",
+  },
+  {
+    id: "breathe-float",
+    title: "Breathe",
+    previewClass: "anim-hover-breathe",
+    previewType: "breathe",
   },
   {
     id: "highlighter-sweep",
-    title: "Highlighter Sweep",
-    badge: "Contrast",
-    desc: "Optical difference-mode bar sweep across text",
-    icon: "⚡",
+    title: "Wipe",
+    previewClass: "anim-hover-sweep",
+    previewType: "sweep",
   },
   {
     id: "word-cascade",
-    title: "Word Cascade",
-    badge: "Dynamic",
-    desc: "Staggered falling words dropping into frame",
-    icon: "🌊",
+    title: "Cascade",
+    previewClass: "anim-hover-rise",
+    previewType: "cascade",
   },
   {
     id: "cyber-scramble",
-    title: "Cyber Scramble",
-    badge: "Sci-Fi",
-    desc: "Khmer glyph scramble-decrypt effect",
-    icon: "👾",
+    title: "Scramble",
+    previewClass: "anim-hover-breathe",
+    previewType: "scramble",
+  },
+  {
+    id: "node-connector",
+    title: "Node Flow",
+    previewClass: "anim-hover-pop",
+    previewType: "nodes",
+  },
+  {
+    id: "typewriter",
+    title: "Typewriter",
+    previewClass: "anim-hover-typewriter",
+    previewType: "typewriter",
   },
 ];
+
+function renderAbcPreview(opt: TextAnimationOption) {
+  switch (opt.previewType) {
+    case "none":
+      return <span className="text-sm sm:text-base font-bold text-foreground/80 group-hover:text-foreground font-sans">Abc</span>;
+    case "rise":
+      return (
+        <span className="abc-text text-sm sm:text-base font-bold text-accent font-sans transition-transform">
+          Abc
+        </span>
+      );
+    case "pan":
+      return (
+        <span className="abc-text text-sm sm:text-base font-bold text-accent font-sans transition-transform">
+          Abc
+        </span>
+      );
+    case "pop":
+      return (
+        <span className="abc-text text-sm sm:text-base font-extrabold text-accent font-sans tracking-tight transition-transform">
+          Abc
+        </span>
+      );
+    case "breathe":
+      return (
+        <span className="abc-text text-sm sm:text-base font-bold text-accent font-sans transition-transform">
+          Abc
+        </span>
+      );
+    case "sweep":
+      return (
+        <div className="relative inline-block">
+          <span className="abc-text text-sm sm:text-base font-bold text-accent font-sans">Abc</span>
+          <div className="absolute inset-x-0 bottom-0 h-1 bg-accent/40 rounded-sm pointer-events-none" />
+        </div>
+      );
+    case "cascade":
+      return (
+        <div className="flex items-center gap-0.5 text-sm sm:text-base font-bold text-accent font-sans">
+          <span className="translate-y-[-1px]">A</span>
+          <span className="translate-y-[0px]">b</span>
+          <span className="translate-y-[2px]">c</span>
+        </div>
+      );
+    case "scramble":
+      return (
+        <div className="flex items-center text-sm sm:text-base font-mono font-bold text-accent">
+          <span>A</span>
+          <span className="text-orange-300 text-xs">#</span>
+          <span>c</span>
+        </div>
+      );
+    case "nodes":
+      return (
+        <div className="relative flex items-center justify-center">
+          <span className="text-sm sm:text-base font-bold text-accent font-sans">Abc</span>
+          <span className="absolute -top-0.5 -right-0.5 h-1 w-1 rounded-full bg-accent animate-ping" />
+          <span className="absolute -bottom-0.5 -left-0.5 h-1 w-1 rounded-full bg-accent" />
+        </div>
+      );
+    case "typewriter":
+      return (
+        <div className="abc-typewriter-container flex items-center overflow-hidden whitespace-nowrap text-sm sm:text-base font-bold text-accent font-sans">
+          <span>Abc</span>
+          <span className="h-3 w-0.5 bg-accent ml-0.5 animate-pulse" />
+        </div>
+      );
+  }
+}
 
 const BG_COLOR_SWATCHES = [
   { label: "Pitch Black", color: "#000000" },
@@ -135,7 +230,7 @@ export function EditPanel({
   onResetScene,
   onOpenRecordModal,
 }: EditPanelProps) {
-  const [copiedNotification, setCopiedNotification] = useState(false);
+  const [copiedSection, setCopiedSection] = useState<string | null>(null);
   const dragPadRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -153,11 +248,10 @@ export function EditPanel({
   const activeAlign = scene?.textAlign ?? "center";
   const activeBackground = scene?.background ?? { style: "none", imageDataUrl: null };
 
-  const handleApplyToAll = () => {
-    if (!scene) return;
-    onApplyToAllScenes(scene);
-    setCopiedNotification(true);
-    setTimeout(() => setCopiedNotification(false), 2000);
+  const handleApplyPartialToAll = (sectionKey: string, updates: Partial<Scene>) => {
+    onApplyToAllScenes(updates);
+    setCopiedSection(sectionKey);
+    setTimeout(() => setCopiedSection(null), 2000);
   };
 
   // 2D Drag Pad Handler
@@ -334,80 +428,93 @@ export function EditPanel({
           </button>
         </div>
 
-        {/* Batch action buttons */}
-        <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/60 pt-2.5">
-          <button
-            type="button"
-            onClick={handleApplyToAll}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-surface-raised px-2.5 py-1.5 text-xs font-medium text-foreground transition hover:border-accent hover:text-accent"
-            title="Apply this scene's style, font & colors to all scenes"
-          >
-            {copiedNotification ? (
-              <>
-                <Check size={13} className="text-green-400" />
-                <span className="text-green-400">Applied to All!</span>
-              </>
-            ) : (
-              <>
-                <CopyCheck size={13} />
-                <span>Apply to All Scenes</span>
-              </>
-            )}
-          </button>
-
+        {/* Scene Reset button */}
+        <div className="mt-3 flex items-center justify-end border-t border-border/60 pt-2">
           <button
             type="button"
             onClick={() => onResetScene(activeSceneIndex)}
-            className="flex items-center justify-center gap-1 rounded-md border border-border bg-surface-raised px-2.5 py-1.5 text-xs font-medium text-muted transition hover:border-border hover:text-foreground"
+            className="flex items-center justify-center gap-1.5 rounded-lg border border-border bg-surface-raised px-2.5 py-1 text-xs font-medium text-muted transition hover:border-border hover:text-foreground cursor-pointer"
             title="Reset this scene to default styles"
           >
-            <RotateCcw size={13} />
-            <span>Reset</span>
+            <RotateCcw size={12} />
+            <span>Reset Scene</span>
           </button>
         </div>
       </div>
 
-      {/* 2. Animation Layout Selector */}
-      <div className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4">
-        <div className="flex items-center justify-between">
+      {/* 2. Text Animations Selector */}
+      <div className="flex flex-col gap-2.5 rounded-xl border border-border bg-surface p-3 shadow-sm">
+        <div className="flex items-center justify-between pb-1.5 border-b border-border/80">
           <div className="flex items-center gap-2">
-            <Sparkles size={16} className="text-accent" />
-            <h3 className="text-sm font-semibold">Animation Style</h3>
+            <Sparkles size={15} className="text-accent" />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Text Animations</h3>
           </div>
-          <span className="text-[11px] font-medium text-muted">
-            {ANIMATION_OPTIONS.find((a) => a.id === activeLayout)?.badge}
+          <span className="text-[10px] font-semibold text-accent font-mono bg-accent/15 px-2 py-0.5 rounded-full">
+            {TEXT_ANIMATIONS.find((a) => a.id === activeLayout)?.title ?? "Pop"}
           </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
-          {ANIMATION_OPTIONS.map((opt) => {
+        {/* Compact 3-Column Grid */}
+        <div className="grid grid-cols-3 gap-2 pt-0.5">
+          {TEXT_ANIMATIONS.map((opt) => {
             const isSelected = activeLayout === opt.id;
             return (
               <button
                 key={opt.id}
                 type="button"
                 onClick={() => onUpdateScene(activeSceneIndex, { layout: opt.id })}
-                className={`relative flex flex-col items-start gap-1 rounded-lg border p-2.5 text-left transition-all ${
-                  isSelected
-                    ? "border-accent bg-accent/15 text-foreground ring-1 ring-accent"
-                    : "border-border bg-surface-raised text-muted hover:border-border hover:text-foreground"
-                }`}
+                className={`group flex flex-col items-center cursor-pointer select-none transition ${opt.previewClass}`}
               >
-                <div className="flex w-full items-center justify-between">
-                  <span className="text-base">{opt.icon}</span>
+                {/* Compact Card Container */}
+                <div
+                  className={`relative h-14 w-full rounded-lg border flex items-center justify-center transition-all shadow-sm ${
+                    isSelected
+                      ? "border-accent ring-2 ring-accent/60 bg-accent/15"
+                      : "border-border/80 bg-surface-raised hover:border-accent/50 hover:bg-surface-raised/90"
+                  }`}
+                >
+                  {renderAbcPreview(opt)}
+
                   {isSelected && (
-                    <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
+                    <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
                   )}
                 </div>
-                <div className="font-semibold text-xs leading-snug mt-1 text-foreground">
+
+                {/* Centered Label under card */}
+                <span
+                  className={`mt-1 text-[10px] transition-colors text-center truncate w-full ${
+                    isSelected
+                      ? "text-accent font-bold"
+                      : "text-foreground/80 font-medium group-hover:text-foreground"
+                  }`}
+                >
                   {opt.title}
-                </div>
-                <div className="text-[10px] leading-tight opacity-75 line-clamp-2">
-                  {opt.desc}
-                </div>
+                </span>
               </button>
             );
           })}
+        </div>
+
+        {/* Apply Animation to All Scenes */}
+        <div className="pt-2 border-t border-border/60">
+          <button
+            type="button"
+            onClick={() => handleApplyPartialToAll("animation", { layout: activeLayout })}
+            className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-border bg-surface-raised py-1.5 px-3 text-[11px] font-semibold text-foreground transition hover:border-accent hover:text-accent cursor-pointer"
+            title="Apply this text animation to all scenes"
+          >
+            {copiedSection === "animation" ? (
+              <>
+                <Check size={12} className="text-emerald-400" />
+                <span className="text-emerald-400">Animation Applied to All Scenes!</span>
+              </>
+            ) : (
+              <>
+                <CopyCheck size={12} />
+                <span>Apply Animation to All Scenes</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
 
@@ -585,6 +692,34 @@ export function EditPanel({
             ))}
           </div>
         </div>
+
+        {/* Apply Colors & Background to All Scenes */}
+        <div className="pt-2 border-t border-border/60">
+          <button
+            type="button"
+            onClick={() =>
+              handleApplyPartialToAll("colors", {
+                backgroundColor: activeBgColor,
+                textColor: activeTextColor,
+                background: activeBackground,
+              })
+            }
+            className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-border bg-surface-raised py-1.5 px-3 text-[11px] font-semibold text-foreground transition hover:border-accent hover:text-accent cursor-pointer"
+            title="Apply these colors & background style to all scenes"
+          >
+            {copiedSection === "colors" ? (
+              <>
+                <Check size={12} className="text-emerald-400" />
+                <span className="text-emerald-400">Colors Applied to All Scenes!</span>
+              </>
+            ) : (
+              <>
+                <CopyCheck size={12} />
+                <span>Apply Colors & Background to All Scenes</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* 4. Line Height & Typography */}
@@ -705,6 +840,34 @@ export function EditPanel({
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Apply Typography to All Scenes */}
+        <div className="pt-2 border-t border-border/60">
+          <button
+            type="button"
+            onClick={() =>
+              handleApplyPartialToAll("typography", {
+                fontSize: activeFontSize,
+                lineHeight: activeLineHeight,
+                textAlign: activeAlign,
+              })
+            }
+            className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-border bg-surface-raised py-1.5 px-3 text-[11px] font-semibold text-foreground transition hover:border-accent hover:text-accent cursor-pointer"
+            title="Apply font size, line-height & alignment to all scenes"
+          >
+            {copiedSection === "typography" ? (
+              <>
+                <Check size={12} className="text-emerald-400" />
+                <span className="text-emerald-400">Typography Applied to All Scenes!</span>
+              </>
+            ) : (
+              <>
+                <CopyCheck size={12} />
+                <span>Apply Typography to All Scenes</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
 

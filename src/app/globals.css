@@ -59,3 +59,60 @@ input:disabled,
 select:disabled {
   cursor: not-allowed;
 }
+
+/* Canva-Style Text Animation Previews */
+@keyframes anim-pop {
+  0% { transform: scale(0.6); opacity: 0.3; }
+  65% { transform: scale(1.18); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes anim-rise {
+  0% { transform: translateY(12px); opacity: 0.2; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes anim-pan {
+  0% { transform: translateX(-16px); opacity: 0.2; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes anim-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.18); }
+}
+
+@keyframes anim-sweep {
+  0% { clip-path: inset(0 100% 0 0); opacity: 0.3; }
+  100% { clip-path: inset(0 0 0 0); opacity: 1; }
+}
+
+@keyframes anim-typewriter {
+  0% { width: 0; }
+  100% { width: 100%; }
+}
+
+.anim-hover-pop:hover .abc-text {
+  animation: anim-pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) infinite alternate;
+}
+
+.anim-hover-rise:hover .abc-text {
+  animation: anim-rise 0.7s ease-out infinite alternate;
+}
+
+.anim-hover-pan:hover .abc-text {
+  animation: anim-pan 0.7s ease-out infinite alternate;
+}
+
+.anim-hover-breathe:hover .abc-text {
+  animation: anim-breathe 1.2s ease-in-out infinite;
+}
+
+.anim-hover-sweep:hover .abc-text {
+  animation: anim-sweep 0.7s ease-out infinite alternate;
+}
+
+.anim-hover-typewriter:hover .abc-typewriter-container {
+  animation: anim-typewriter 1s steps(4, end) infinite alternate;
+}
+

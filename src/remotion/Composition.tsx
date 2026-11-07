@@ -5,6 +5,11 @@ import { HighlighterSweep } from "./scenes/HighlighterSweep";
 import { WordCascade } from "./scenes/WordCascade";
 import { CyberScramble } from "./scenes/CyberScramble";
 import { NodeConnector } from "./scenes/NodeConnector";
+import { FadeRise } from "./scenes/FadeRise";
+import { PanSlide } from "./scenes/PanSlide";
+import { BreatheFloat } from "./scenes/BreatheFloat";
+import { Typewriter } from "./scenes/Typewriter";
+import { StaticClean } from "./scenes/StaticClean";
 import { DEFAULT_BACKGROUND, type BackgroundConfig } from "./backgrounds/types";
 
 export interface KineticCastProps extends Record<string, unknown> {
@@ -18,6 +23,11 @@ const SCENE_COMPONENTS = {
   "word-cascade": WordCascade,
   "cyber-scramble": CyberScramble,
   "node-connector": NodeConnector,
+  "fade-rise": FadeRise,
+  "pan-slide": PanSlide,
+  "breathe-float": BreatheFloat,
+  typewriter: Typewriter,
+  "static-clean": StaticClean,
 } as const;
 
 export function withStartFrames(scenes: Scene[]): Array<{ scene: Scene; from: number }> {

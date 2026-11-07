@@ -35,14 +35,19 @@ export type SceneLayout =
   | "highlighter-sweep"
   | "word-cascade"
   | "cyber-scramble"
-  | "node-connector";
+  | "node-connector"
+  | "fade-rise"
+  | "pan-slide"
+  | "breathe-float"
+  | "typewriter"
+  | "static-clean";
 
 export const LAYOUT_CYCLE: SceneLayout[] = [
   "center-impact",
-  "node-connector",
-  "highlighter-sweep",
+  "fade-rise",
   "word-cascade",
-  "cyber-scramble",
+  "pan-slide",
+  "breathe-float",
 ];
 
 function splitIntoSentences(script: string): string[] {
@@ -66,10 +71,11 @@ function countWords(sentence: string): number {
 
 export function buildScenes(
   script: string,
-  options: { durationSeconds?: number; wpm?: number; fps?: number } = {}
+  options: { durationSeconds?: number; wpm?: number; fps?: number; defaultLayout?: SceneLayout } = {}
 ): Scene[] {
   const durationParam = options.durationSeconds ?? (options.wpm ? options.wpm : 1.8);
   const fps = options.fps ?? 30;
+  const layout: SceneLayout = options.defaultLayout ?? "center-impact";
 
   return splitIntoSentences(script).map((text, index) => {
     const wordCount = countWords(text);
@@ -83,8 +89,8 @@ export function buildScenes(
       durationSeconds,
       durationInFrames: secondsToFrames(durationSeconds, fps),
       stickers: matchStickers(text),
-      layout: LAYOUT_CYCLE[index % LAYOUT_CYCLE.length],
-      backgroundColor: index % 2 === 0 ? "#000000" : "#0d0f14",
+      layout,
+      backgroundColor: "#000000",
       textColor: "#FFFFFF",
       lineHeight: 1.35,
       fontSize: 76,

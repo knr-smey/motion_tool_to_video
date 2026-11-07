@@ -33,7 +33,7 @@ export function KineticStage({
   playerRef,
   activeSceneIndex = 0,
   onUpdatePosition,
-  showGuide = true,
+  showGuide = false,
 }: KineticStageProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { width: compWidth, height: compHeight } = DIMENSIONS[aspectRatio];

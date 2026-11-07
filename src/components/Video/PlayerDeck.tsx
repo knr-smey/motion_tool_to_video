@@ -44,7 +44,7 @@ export function PlayerDeck({
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("16:9");
   const [isPlaying, setIsPlaying] = useState(false);
   const [frame, setFrame] = useState(0);
-  const [showGuide, setShowGuide] = useState(true);
+  const [showGuide, setShowGuide] = useState(false);
 
   useEffect(() => {
     const player = playerRef.current;

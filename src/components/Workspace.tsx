@@ -83,22 +83,17 @@ export function Workspace() {
   );
 
   const handleApplyToAllScenes = useCallback(
-    (templateScene: Scene) => {
-      const newOverrides: Record<number, Partial<Scene>> = {};
-      baseScenes.forEach((_, idx) => {
-        newOverrides[idx] = {
-          layout: templateScene.layout,
-          backgroundColor: templateScene.backgroundColor,
-          textColor: templateScene.textColor,
-          lineHeight: templateScene.lineHeight,
-          fontSize: templateScene.fontSize,
-          positionX: templateScene.positionX,
-          positionY: templateScene.positionY,
-          textAlign: templateScene.textAlign,
-          background: templateScene.background,
-        };
+    (updates: Partial<Scene>) => {
+      setSceneOverrides((prev) => {
+        const newOverrides: Record<number, Partial<Scene>> = {};
+        baseScenes.forEach((_, idx) => {
+          newOverrides[idx] = {
+            ...(prev[idx] ?? {}),
+            ...updates,
+          };
+        });
+        return newOverrides;
       });
-      setSceneOverrides(newOverrides);
     },
     [baseScenes]
   );

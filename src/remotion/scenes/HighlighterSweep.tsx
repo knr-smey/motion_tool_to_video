@@ -19,8 +19,11 @@ export function HighlighterSweep({
 }: SceneProps) {
   const frame = useCurrentFrame();
 
-  const sweepX = interpolate(frame, [6, 34], [-30, 130], {
-    extrapolateLeft: "clamp",
+  // Smooth left-to-right wipe reveal without any flashing blocks or difference-blend rectangles
+  const wipeProgress = interpolate(frame, [0, 16], [0, 100], {
+    extrapolateRight: "clamp",
+  });
+  const opacity = interpolate(frame, [0, 8], [0, 1], {
     extrapolateRight: "clamp",
   });
 
@@ -50,23 +53,13 @@ export function HighlighterSweep({
             textAlign,
             lineHeight,
             color: effectiveText,
-            overflow: "hidden",
+            opacity,
+            clipPath: `inset(0 ${100 - wipeProgress}% 0 0)`,
             maxWidth: "90%",
             wordBreak: "break-word",
           }}
         >
           {text}
-          <div
-            style={{
-              position: "absolute",
-              top: 0,
-              bottom: 0,
-              left: `${sweepX - 35}%`,
-              width: "35%",
-              backgroundColor: effectiveText,
-              mixBlendMode: "difference",
-            }}
-          />
         </div>
       </AbsoluteFill>
     </AbsoluteFill>
