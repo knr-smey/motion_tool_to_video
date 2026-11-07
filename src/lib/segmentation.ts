@@ -25,6 +25,9 @@ export interface Scene {
   positionY?: number;
   textAlign?: "left" | "center" | "right";
   background?: BackgroundConfig;
+  nodes?: [string, string, string];
+  audioUrl?: string;
+  audioDurationSeconds?: number;
 }
 
 export type SceneLayout =

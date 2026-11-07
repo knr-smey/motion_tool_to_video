@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { FileText, Sparkles, Sliders, Clock, Layers, Plus } from "lucide-react";
+import { FileText, Sparkles, Sliders, Clock, Layers, Plus, ArrowRight, Bot } from "lucide-react";
 import { PRESETS } from "@/lib/presets";
 import type { Scene } from "@/lib/segmentation";
 import { LAYOUT_THEME } from "@/lib/layoutTheme";
+import { AiGeneratorModal, type GeneratedSceneData } from "./AiGeneratorModal";
 
 interface ScriptPanelProps {
   script: string;
@@ -17,6 +19,7 @@ interface ScriptPanelProps {
   onDurationChange?: (duration: number) => void;
   onWpmChange?: (wpm: number) => void;
   onSelectScene: (index: number) => void;
+  onApplyAiScenes?: (script: string, scenes: GeneratedSceneData[]) => void;
 }
 
 export function ScriptPanel({
@@ -30,7 +33,9 @@ export function ScriptPanel({
   onDurationChange,
   onWpmChange,
   onSelectScene,
+  onApplyAiScenes,
 }: ScriptPanelProps) {
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const currentDuration = duration ?? (wpm ? 60 / (wpm / 4) : 1.8);
   const handleDurationChange = (val: number) => {
     onDurationChange?.(val);
@@ -40,6 +45,31 @@ export function ScriptPanel({
 
   return (
     <div className="flex flex-col gap-4 p-4 text-foreground">
+      {/* 0. AI Video Generator Banner */}
+      <button
+        type="button"
+        onClick={() => setIsAiModalOpen(true)}
+        className="relative flex items-center justify-between overflow-hidden rounded-xl border border-accent/60 bg-gradient-to-r from-accent/20 via-accent/10 to-transparent p-3 text-left transition hover:border-accent hover:shadow-lg hover:shadow-accent/20 group cursor-pointer"
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground font-bold shadow-md shadow-accent/40 group-hover:scale-105 transition-transform">
+            <Sparkles size={18} />
+          </div>
+          <div>
+            <div className="text-xs font-bold text-foreground flex items-center gap-1.5">
+              <span>AI Explainer Generator</span>
+              <span className="text-[9px] bg-accent text-accent-foreground px-1.5 py-0.5 rounded font-black">
+                AI
+              </span>
+            </div>
+            <div className="text-[11px] text-muted">
+              Prompt AI to generate full video with diagrams & lines
+            </div>
+          </div>
+        </div>
+        <ArrowRight size={16} className="text-accent group-hover:translate-x-1 transition-transform" />
+      </button>
+
       {/* 1. Header & Stats */}
       <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
         <div className="flex items-center justify-between mb-2">
@@ -240,6 +270,15 @@ export function ScriptPanel({
           })}
         </div>
       </div>
+
+      {/* AI Generator Modal */}
+      <AiGeneratorModal
+        isOpen={isAiModalOpen}
+        onClose={() => setIsAiModalOpen(false)}
+        onApplyScenes={(newScript, newScenes) => {
+          onApplyAiScenes?.(newScript, newScenes);
+        }}
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { Sequence, AbsoluteFill } from "remotion";
+import { Sequence, AbsoluteFill, Audio } from "remotion";
 import type { Scene } from "@/lib/segmentation";
 import { CenterImpact } from "./scenes/CenterImpact";
 import { HighlighterSweep } from "./scenes/HighlighterSweep";
@@ -53,7 +53,9 @@ export function KineticCast({ scenes, background = DEFAULT_BACKGROUND }: Kinetic
               positionX={scene.positionX}
               positionY={scene.positionY}
               textAlign={scene.textAlign}
+              nodes={scene.nodes}
             />
+            {scene.audioUrl && <Audio src={scene.audioUrl} />}
           </Sequence>
         );
       })}

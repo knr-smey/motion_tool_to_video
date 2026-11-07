@@ -25,7 +25,7 @@ interface StickerRule {
 const STICKER_RULES: StickerRule[] = [
   {
     category: "api",
-    label: "API Architecture",
+    label: "API",
     keywords: [
       "API",
       "api",

@@ -89,52 +89,51 @@ export function KineticStage({
   const handlePercentY = 50 + (posY / compHeight) * 100;
 
   return (
-    // Fixed 16:9 outer frame so the surrounding UI stays horizontal no
-    // matter which aspect ratio is selected — a 9:16 composition is
-    // pillarboxed inside it rather than stretching the whole layout tall.
-    <div className="relative w-full mx-auto aspect-video rounded-lg overflow-hidden border border-border bg-black select-none shadow-lg flex items-center justify-center">
-      <div
-        ref={containerRef}
-        className="relative h-full border-2 border-accent/50"
-        style={{ aspectRatio: `${compWidth} / ${compHeight}`, maxWidth: "100%" }}
-      >
-        <Player
-          ref={playerRef}
-          component={KineticCast}
-          inputProps={{ scenes, background }}
-          durationInFrames={Math.max(1, totalDurationInFrames)}
-          fps={30}
-          compositionWidth={compWidth}
-          compositionHeight={compHeight}
-          style={{ width: "100%", height: "100%" }}
-          controls={false}
-        />
+    <div
+      ref={containerRef}
+      className="relative max-h-full max-w-full rounded-lg overflow-hidden border-2 border-accent/50 bg-black select-none shadow-lg flex items-center justify-center"
+      style={{
+        aspectRatio: `${compWidth} / ${compHeight}`,
+        height: "100%",
+        width: "auto",
+      }}
+    >
+      <Player
+        ref={playerRef}
+        component={KineticCast}
+        inputProps={{ scenes, background }}
+        durationInFrames={Math.max(1, totalDurationInFrames)}
+        fps={30}
+        compositionWidth={compWidth}
+        compositionHeight={compHeight}
+        style={{ width: "100%", height: "100%" }}
+        controls={false}
+      />
 
-        {/* On-Canvas Draggable Guide Handle */}
-        {showGuide && activeScene && (
-          <div
-            style={{
-              left: `${handlePercentX}%`,
-              top: `${handlePercentY}%`,
-              transform: "translate(-50%, -50%)",
-            }}
-            onPointerDown={handlePointerDownOnCanvas}
-            className="absolute z-20 cursor-grab active:cursor-grabbing flex flex-col items-center justify-center pointer-events-auto touch-none"
-            title="Drag to position scene text"
-          >
-            {/* Draggable Badge */}
-            <div className="flex items-center gap-1.5 rounded-full bg-accent/90 backdrop-blur-md px-3 py-1 text-xs font-semibold text-accent-foreground shadow-xl ring-2 ring-white/20 transition-transform hover:scale-105 active:scale-95">
-              <Move size={12} />
-              <span className="font-mono text-[11px] tabular-nums">
-                Drag ({posX >= 0 ? `+${posX}` : posX}, {posY >= 0 ? `+${posY}` : posY})
-              </span>
-            </div>
-
-            {/* Target Reticle Indicator */}
-            <div className="mt-1 h-3 w-3 rounded-full border-2 border-accent/80 bg-accent/30 animate-pulse pointer-events-none" />
+      {/* On-Canvas Draggable Guide Handle */}
+      {showGuide && activeScene && (
+        <div
+          style={{
+            left: `${handlePercentX}%`,
+            top: `${handlePercentY}%`,
+            transform: "translate(-50%, -50%)",
+          }}
+          onPointerDown={handlePointerDownOnCanvas}
+          className="absolute z-20 cursor-grab active:cursor-grabbing flex flex-col items-center justify-center pointer-events-auto touch-none"
+          title="Drag to position scene text"
+        >
+          {/* Draggable Badge */}
+          <div className="flex items-center gap-1.5 rounded-full bg-accent/90 backdrop-blur-md px-3 py-1 text-xs font-semibold text-accent-foreground shadow-xl ring-2 ring-white/20 transition-transform hover:scale-105 active:scale-95">
+            <Move size={12} />
+            <span className="font-mono text-[11px] tabular-nums">
+              Drag ({posX >= 0 ? `+${posX}` : posX}, {posY >= 0 ? `+${posY}` : posY})
+            </span>
           </div>
-        )}
-      </div>
+
+          {/* Target Reticle Indicator */}
+          <div className="mt-1 h-3 w-3 rounded-full border-2 border-accent/80 bg-accent/30 animate-pulse pointer-events-none" />
+        </div>
+      )}
     </div>
   );
 }

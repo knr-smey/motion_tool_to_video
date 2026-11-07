@@ -11,6 +11,7 @@ import { buildScenes, type Scene } from "@/lib/segmentation";
 import { getTotalDurationInFrames, withStartFrames } from "@/remotion/Composition";
 import { DEFAULT_PRESET_ID, PRESETS } from "@/lib/presets";
 import { DEFAULT_BACKGROUND, type BackgroundConfig } from "@/remotion/backgrounds/types";
+import { VoiceoverModal } from "@/components/Audio/VoiceoverModal";
 
 const FPS = 30;
 const defaultScript = PRESETS.find((preset) => preset.id === DEFAULT_PRESET_ID)!.script;
@@ -21,6 +22,7 @@ export function Workspace() {
   const [background, setBackground] = useState<BackgroundConfig>(DEFAULT_BACKGROUND);
   const [activeSceneIndex, setActiveSceneIndex] = useState(0);
   const [sceneOverrides, setSceneOverrides] = useState<Record<number, Partial<Scene>>>({});
+  const [recordModalIndex, setRecordModalIndex] = useState<number | null>(null);
 
   const playerRef = useRef<PlayerRef>(null);
 
@@ -109,6 +111,54 @@ export function Workspace() {
     });
   }, []);
 
+  const handleApplyAiScenes = useCallback(
+    (newScript: string, generatedScenes: import("./Editor/AiGeneratorModal").GeneratedSceneData[]) => {
+      setScript(newScript);
+      const overrides: Record<number, Partial<Scene>> = {};
+      generatedScenes.forEach((s, idx) => {
+        overrides[idx] = {
+          layout: s.layout,
+          nodes: s.nodes,
+          durationSeconds: s.durationSeconds ?? 2.0,
+          durationInFrames: Math.round((s.durationSeconds ?? 2.0) * 30),
+        };
+      });
+      setSceneOverrides(overrides);
+      setActiveSceneIndex(0);
+      if (playerRef.current) {
+        playerRef.current.seekTo(0);
+      }
+    },
+    []
+  );
+
+  const handleOpenRecordModal = useCallback((index: number) => {
+    setActiveSceneIndex(index);
+    setRecordModalIndex(index);
+  }, []);
+
+  const handleSaveAudio = useCallback((index: number, audioDataUrl: string, durationSeconds: number) => {
+    setSceneOverrides((prev) => ({
+      ...prev,
+      [index]: {
+        ...prev[index],
+        audioUrl: audioDataUrl,
+        audioDurationSeconds: durationSeconds,
+        durationSeconds,
+        durationInFrames: Math.round(durationSeconds * FPS),
+      },
+    }));
+  }, []);
+
+  const handleRemoveAudio = useCallback((index: number) => {
+    setSceneOverrides((prev) => {
+      const existing = prev[index];
+      if (!existing) return prev;
+      const { audioUrl, audioDurationSeconds, ...rest } = existing;
+      return { ...prev, [index]: rest };
+    });
+  }, []);
+
   return (
     <div className="flex h-screen flex-col bg-background text-foreground overflow-hidden">
       <Topbar />
@@ -125,27 +175,33 @@ export function Workspace() {
             onScriptChange={setScript}
             onDurationChange={setSceneDuration}
             onSelectScene={handleSelectScene}
+            onApplyAiScenes={handleApplyAiScenes}
           />
         </aside>
 
-        {/* CENTER PANEL: Stage Deck & Timeline */}
-        <main className="flex flex-1 flex-col overflow-y-auto p-4 xl:p-6 gap-4 items-center justify-start bg-background/60">
-          <PlayerDeck
-            scenes={scenes}
-            totalDurationInFrames={totalDurationInFrames}
-            fps={FPS}
-            background={background}
-            playerRef={playerRef}
-            activeSceneIndex={safeActiveIndex}
-            onUpdatePosition={handleUpdatePosition}
-          />
+        {/* CENTER PANEL: Stage Deck & Timeline - Fits 100% vertically without scrolling */}
+        <main className="flex flex-1 flex-col h-full min-h-0 overflow-hidden p-2.5 xl:p-3.5 gap-2.5 justify-between items-center bg-background/60">
+          <div className="flex-1 min-h-0 w-full flex flex-col items-center justify-center overflow-hidden">
+            <PlayerDeck
+              scenes={scenes}
+              totalDurationInFrames={totalDurationInFrames}
+              fps={FPS}
+              background={background}
+              playerRef={playerRef}
+              activeSceneIndex={safeActiveIndex}
+              onUpdatePosition={handleUpdatePosition}
+            />
+          </div>
 
-          <ScenePlaylist
-            scenes={scenes}
-            playerRef={playerRef}
-            activeSceneIndex={safeActiveIndex}
-            onSelectScene={handleSelectScene}
-          />
+          <div className="shrink-0 w-full flex justify-center">
+            <ScenePlaylist
+              scenes={scenes}
+              playerRef={playerRef}
+              activeSceneIndex={safeActiveIndex}
+              onSelectScene={handleSelectScene}
+              onOpenRecordModal={handleOpenRecordModal}
+            />
+          </div>
         </main>
 
         {/* RIGHT PANEL: Edit Panel */}
@@ -157,9 +213,20 @@ export function Workspace() {
             onUpdateScene={handleUpdateScene}
             onApplyToAllScenes={handleApplyToAllScenes}
             onResetScene={handleResetScene}
+            onOpenRecordModal={handleOpenRecordModal}
           />
         </aside>
       </div>
+
+      {/* Voiceover Recording Modal */}
+      <VoiceoverModal
+        isOpen={recordModalIndex !== null}
+        scene={recordModalIndex !== null ? scenes[recordModalIndex] : undefined}
+        sceneIndex={recordModalIndex ?? 0}
+        onClose={() => setRecordModalIndex(null)}
+        onSaveAudio={handleSaveAudio}
+        onRemoveAudio={handleRemoveAudio}
+      />
     </div>
   );
 }

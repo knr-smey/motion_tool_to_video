@@ -16,6 +16,8 @@ import {
   AlignRight,
   X,
   Upload,
+  Mic,
+  Volume2,
 } from "lucide-react";
 import type { Scene, SceneLayout } from "@/lib/segmentation";
 import type { BackgroundConfig, BackgroundStyle } from "@/remotion/backgrounds/types";
@@ -27,6 +29,7 @@ export interface EditPanelProps {
   onUpdateScene: (index: number, updates: Partial<Scene>) => void;
   onApplyToAllScenes: (templateScene: Scene) => void;
   onResetScene: (index: number) => void;
+  onOpenRecordModal?: (index: number) => void;
 }
 
 const ANIMATION_OPTIONS: {
@@ -130,6 +133,7 @@ export function EditPanel({
   onUpdateScene,
   onApplyToAllScenes,
   onResetScene,
+  onOpenRecordModal,
 }: EditPanelProps) {
   const [copiedNotification, setCopiedNotification] = useState(false);
   const dragPadRef = useRef<HTMLDivElement>(null);
@@ -294,6 +298,40 @@ export function EditPanel({
               {scene.durationSeconds.toFixed(1)}s
             </span>
           </div>
+        </div>
+
+        {/* Voiceover Card */}
+        <div className="mt-2 flex items-center justify-between rounded-lg border border-border/60 bg-surface-raised px-2.5 py-2 text-xs">
+          <div className="flex items-center gap-2">
+            <div
+              className={`flex h-7 w-7 items-center justify-center rounded-lg ${
+                scene.audioUrl
+                  ? "bg-emerald-500/20 text-emerald-400"
+                  : "bg-surface text-muted"
+              }`}
+            >
+              <Mic size={14} />
+            </div>
+            <div>
+              <div className="font-semibold text-foreground text-[11px]">
+                {scene.audioUrl ? "Voiceover Recorded" : "Voice Speech"}
+              </div>
+              <div className="text-[10px] text-muted">
+                {scene.audioUrl
+                  ? `🎙️ ${scene.audioDurationSeconds || scene.durationSeconds}s duration`
+                  : "Record your voice for this scene"}
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => onOpenRecordModal?.(activeSceneIndex)}
+            className="flex items-center gap-1 rounded-lg bg-emerald-600/90 hover:bg-emerald-500 px-2.5 py-1.5 text-xs font-bold text-white shadow-sm transition cursor-pointer"
+          >
+            <Mic size={12} />
+            <span>{scene.audioUrl ? "Re-record" : "Record Voice"}</span>
+          </button>
         </div>
 
         {/* Batch action buttons */}

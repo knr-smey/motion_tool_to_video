@@ -17,7 +17,9 @@ export function NodeConnector({
   positionX = 0,
   positionY = 0,
   textAlign = "center",
+  nodes,
 }: SceneProps) {
+  const [nodeLabel1, nodeLabel2, nodeLabel3] = nodes ?? ["Client App", "REST API", "Database"];
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -190,9 +192,14 @@ export function NodeConnector({
                 fontSize: 15,
                 color: effectiveText,
                 letterSpacing: "0.5px",
+                maxWidth: 130,
+                textAlign: "center",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
               }}
             >
-              Client App
+              {nodeLabel1}
             </span>
           </div>
 
@@ -230,9 +237,14 @@ export function NodeConnector({
                 fontSize: 16,
                 color: accentColor,
                 letterSpacing: "0.5px",
+                maxWidth: 150,
+                textAlign: "center",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
               }}
             >
-              REST API
+              {nodeLabel2}
             </span>
           </div>
 
@@ -270,9 +282,14 @@ export function NodeConnector({
                 fontSize: 15,
                 color: effectiveText,
                 letterSpacing: "0.5px",
+                maxWidth: 130,
+                textAlign: "center",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
               }}
             >
-              Database
+              {nodeLabel3}
             </span>
           </div>
         </div>

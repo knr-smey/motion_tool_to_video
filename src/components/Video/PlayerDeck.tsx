@@ -84,20 +84,22 @@ export function PlayerDeck({
   );
 
   return (
-    <div className="flex w-full max-w-4xl flex-col gap-3 rounded-xl border border-border bg-surface p-4 shadow-sm">
-      <KineticStage
-        scenes={scenes}
-        totalDurationInFrames={totalDurationInFrames}
-        aspectRatio={aspectRatio}
-        background={background}
-        playerRef={playerRef}
-        activeSceneIndex={activeSceneIndex}
-        onUpdatePosition={onUpdatePosition}
-        showGuide={showGuide}
-      />
+    <div className="flex w-full max-w-4xl flex-col gap-2 rounded-xl border border-border bg-surface p-2.5 shadow-sm h-full min-h-0 justify-between">
+      <div className="flex-1 min-h-[200px] w-full flex items-center justify-center overflow-hidden">
+        <KineticStage
+          scenes={scenes}
+          totalDurationInFrames={totalDurationInFrames}
+          aspectRatio={aspectRatio}
+          background={background}
+          playerRef={playerRef}
+          activeSceneIndex={activeSceneIndex}
+          onUpdatePosition={onUpdatePosition}
+          showGuide={showGuide}
+        />
+      </div>
 
       {/* Scrubber & Time code */}
-      <div className="flex items-center gap-3 text-xs text-muted">
+      <div className="flex items-center gap-3 text-xs text-muted shrink-0">
         <span className="tabular-nums font-mono">{formatTime(frame, fps)}</span>
         <input
           type="range"
@@ -113,7 +115,7 @@ export function PlayerDeck({
       </div>
 
       {/* Control bar */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
           <button
             type="button"

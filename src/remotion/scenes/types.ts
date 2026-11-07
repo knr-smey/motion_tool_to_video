@@ -13,4 +13,5 @@ export interface SceneProps {
   positionX?: number;
   positionY?: number;
   textAlign?: "left" | "center" | "right";
+  nodes?: [string, string, string];
 }

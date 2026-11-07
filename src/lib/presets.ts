@@ -7,13 +7,6 @@ export interface Preset {
 
 export const PRESETS: Preset[] = [
   {
-    id: "api-architecture",
-    title: "API Architecture ⚡",
-    description: "API, Server, & Database flow",
-    script:
-      "API គឺជាស្ពានចម្លងទិន្នន័យរវាង Client និង Server៕\nនៅពេលអ្នកចុចប៊ូតុង Client នឹងផ្ញើ HTTP Request ទៅកាន់ API៕\nServer ដំណើរការ Request និងទាញយកទិន្នន័យពី Database៕\nបន្ទាប់មក API ឆ្លើយតបជា JSON Data មកកាន់អេក្រង់របស់អ្នកវិញយ៉ាងរហ័ស៕",
-  },
-  {
     id: "angkor-wat",
     title: "Angkor Wat",
     description: "History & heritage",
