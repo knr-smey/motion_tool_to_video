@@ -9,24 +9,33 @@ import { LAYOUT_THEME } from "@/lib/layoutTheme";
 interface ScriptPanelProps {
   script: string;
   wordCount: number;
-  wpm: number;
+  duration?: number;
+  wpm?: number;
   scenes: Scene[];
   activeSceneIndex: number;
   onScriptChange: (script: string) => void;
-  onWpmChange: (wpm: number) => void;
+  onDurationChange?: (duration: number) => void;
+  onWpmChange?: (wpm: number) => void;
   onSelectScene: (index: number) => void;
 }
 
 export function ScriptPanel({
   script,
   wordCount,
-  wpm,
+  duration = 1.8,
+  wpm = 145,
   scenes,
   activeSceneIndex,
   onScriptChange,
+  onDurationChange,
   onWpmChange,
   onSelectScene,
 }: ScriptPanelProps) {
+  const currentDuration = duration ?? (wpm ? 60 / (wpm / 4) : 1.8);
+  const handleDurationChange = (val: number) => {
+    onDurationChange?.(val);
+    onWpmChange?.(Math.round((60 / val) * 4));
+  };
   const totalSeconds = scenes.reduce((sum, s) => sum + s.durationSeconds, 0);
 
   return (
@@ -113,26 +122,51 @@ export function ScriptPanel({
           💡 <span className="text-foreground/90 font-medium">1 Line = 1 Scene:</span> Each line separated by <kbd className="rounded bg-surface px-1 py-0.5 font-mono text-[10px] border border-border">Enter</kbd> creates exactly 1 scene.
         </p>
 
-        {/* Pace Slider */}
-        <div className="flex items-center justify-between rounded-lg border border-border bg-surface-raised px-3 py-2 text-xs text-muted mt-1">
-          <div className="flex items-center gap-1.5">
-            <Clock size={13} />
-            <span>Pace</span>
+        {/* Scene Duration Slider (e.g. 1.2s) */}
+        <div className="flex flex-col gap-2 rounded-lg border border-border bg-surface-raised p-3 text-xs text-muted mt-1">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 font-medium text-foreground">
+              <Clock size={13} className="text-accent" />
+              <span>Scene Duration</span>
+            </div>
+
+            <div className="flex items-center gap-1 rounded bg-accent/15 px-2 py-0.5 text-xs font-bold font-mono text-accent">
+              <span>{currentDuration.toFixed(1)}s</span>
+              <span className="text-[10px] font-normal text-muted">/ scene</span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <input
-              type="range"
-              min={120}
-              max={180}
-              step={5}
-              value={wpm}
-              onChange={(event) => onWpmChange(Number(event.target.value))}
-              className="w-24 accent-accent cursor-pointer"
-            />
-            <span className="w-14 text-right tabular-nums text-foreground font-mono">
-              {wpm} wpm
-            </span>
+          <input
+            type="range"
+            min={0.8}
+            max={5.0}
+            step={0.1}
+            value={currentDuration}
+            onChange={(event) => handleDurationChange(Number(event.target.value))}
+            className="w-full accent-accent cursor-pointer"
+          />
+
+          <div className="flex items-center justify-between text-[10px] text-muted pt-0.5">
+            {[
+              { label: "1.0s", val: 1.0 },
+              { label: "1.2s", val: 1.2 },
+              { label: "1.5s", val: 1.5 },
+              { label: "2.0s", val: 2.0 },
+              { label: "3.0s", val: 3.0 },
+            ].map((preset) => (
+              <button
+                key={preset.label}
+                type="button"
+                onClick={() => handleDurationChange(preset.val)}
+                className={`rounded px-1.5 py-0.5 transition ${
+                  Math.abs(currentDuration - preset.val) < 0.05
+                    ? "bg-accent text-accent-foreground font-semibold"
+                    : "hover:text-foreground bg-surface/60"
+                }`}
+              >
+                {preset.label}
+              </button>
+            ))}
           </div>
         </div>
       </div>

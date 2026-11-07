@@ -1,11 +1,16 @@
-export type StickerCategory = "history" | "technology" | "finance" | "science" | "general";
+export type StickerCategory =
+  | "history"
+  | "technology"
+  | "finance"
+  | "science"
+  | "api"
+  | "server"
+  | "database"
+  | "code"
+  | "network"
+  | "security"
+  | "general";
 
-// Deliberately data-only (no component references): Scene objects carrying
-// this flow through Remotion's composition props, which get JSON-serialized
-// when crossing from the render CLI into the headless browser. A function
-// value here would silently become `undefined` on the other side. The
-// actual icon component is resolved from `category` at render time instead
-// (see STICKER_ICON_BY_CATEGORY in components/Video/icons.tsx).
 export interface StickerMatch {
   category: StickerCategory;
   label: string;
@@ -19,8 +24,50 @@ interface StickerRule {
 
 const STICKER_RULES: StickerRule[] = [
   {
+    category: "api",
+    label: "API Architecture",
+    keywords: [
+      "API",
+      "api",
+      "REST",
+      "GraphQL",
+      "endpoint",
+      "request",
+      "response",
+      "webhook",
+      "interface",
+      "ស្ពាន",
+      "អេសភីអាយ",
+    ],
+  },
+  {
+    category: "server",
+    label: "Backend Server",
+    keywords: ["server", "Server", "សឺវើរ", "backend", "host", "node"],
+  },
+  {
+    category: "database",
+    label: "Database & Data",
+    keywords: ["database", "Database", "ទិន្នន័យ", "SQL", "data", "storage", "mongo"],
+  },
+  {
+    category: "code",
+    label: "Code & Logic",
+    keywords: ["code", "coding", "developer", "program", "កូដ", "software", "functions", "script"],
+  },
+  {
+    category: "network",
+    label: "Network & Flow",
+    keywords: ["network", "internet", "connect", "បណ្តាញ", "flow", "protocol", "http", "https"],
+  },
+  {
+    category: "security",
+    label: "Security & Auth",
+    keywords: ["security", "token", "auth", "key", "password", "សុវត្ថិភាព", "secure", "jwt"],
+  },
+  {
     category: "history",
-    label: "Angkor Wat",
+    label: "Angkor Heritage",
     keywords: ["អង្គរ", "ប្រាសាទ", "ខ្មែរ", "Angkor", "temple"],
   },
   {
@@ -43,7 +90,7 @@ const STICKER_RULES: StickerRule[] = [
   },
   {
     category: "science",
-    label: "Science",
+    label: "Science & Space",
     keywords: ["វិទ្យាសាស្ត្រ", "អវកាស", "science", "space", "physics"],
   },
 ];
@@ -54,7 +101,11 @@ export function matchStickers(text: string): StickerMatch[] {
 
   for (const rule of STICKER_RULES) {
     if (seen.has(rule.category)) continue;
-    const hit = rule.keywords.some((keyword) => text.includes(keyword));
+    const hit = rule.keywords.some((keyword) => {
+      // Case-insensitive match for latin words, direct match for Khmer
+      const regex = new RegExp(`(^|\\W)${keyword}(\\W|$)`, "i");
+      return text.includes(keyword) || regex.test(text);
+    });
     if (hit) {
       matches.push({ category: rule.category, label: rule.label });
       seen.add(rule.category);

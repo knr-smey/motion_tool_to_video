@@ -17,7 +17,7 @@ const defaultScript = PRESETS.find((preset) => preset.id === DEFAULT_PRESET_ID)!
 
 export function Workspace() {
   const [script, setScript] = useState(defaultScript);
-  const [wpm, setWpm] = useState(145);
+  const [sceneDuration, setSceneDuration] = useState(1.8);
   const [background, setBackground] = useState<BackgroundConfig>(DEFAULT_BACKGROUND);
   const [activeSceneIndex, setActiveSceneIndex] = useState(0);
   const [sceneOverrides, setSceneOverrides] = useState<Record<number, Partial<Scene>>>({});
@@ -25,7 +25,10 @@ export function Workspace() {
   const playerRef = useRef<PlayerRef>(null);
 
   // Generate base scenes segmented from script text
-  const baseScenes = useMemo(() => buildScenes(script, { wpm, fps: FPS }), [script, wpm]);
+  const baseScenes = useMemo(
+    () => buildScenes(script, { durationSeconds: sceneDuration, fps: FPS }),
+    [script, sceneDuration]
+  );
 
   // Merge base scenes with any scene-specific customizations
   const scenes = useMemo(() => {
@@ -116,11 +119,11 @@ export function Workspace() {
           <ScriptPanel
             script={script}
             wordCount={wordCount}
-            wpm={wpm}
+            duration={sceneDuration}
             scenes={scenes}
             activeSceneIndex={safeActiveIndex}
             onScriptChange={setScript}
-            onWpmChange={setWpm}
+            onDurationChange={setSceneDuration}
             onSelectScene={handleSelectScene}
           />
         </aside>

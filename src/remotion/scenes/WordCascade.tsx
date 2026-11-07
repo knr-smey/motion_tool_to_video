@@ -1,7 +1,7 @@
 import { interpolate, useCurrentFrame, useVideoConfig, AbsoluteFill } from "remotion";
 import { StickerBadge } from "@/components/Video/StickerBadge";
 import { SceneBackground } from "@/remotion/backgrounds/SceneBackground";
-import { kantumruyProFontFamily } from "../fonts";
+import { kantumruyProFontFamily, poppinsFontFamily } from "../fonts";
 import type { SceneProps } from "./types";
 import { isColorDark } from "@/lib/colorUtils";
 
@@ -75,7 +75,7 @@ export function WordCascade({
             <span
               key={`${token}-${i}`}
               style={{
-                fontFamily: kantumruyProFontFamily,
+                fontFamily: `${poppinsFontFamily}, ${kantumruyProFontFamily}, sans-serif`,
                 fontWeight: 600,
                 fontSize,
                 lineHeight,

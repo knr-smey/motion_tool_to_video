@@ -1,7 +1,7 @@
 import { interpolate, useCurrentFrame, AbsoluteFill } from "remotion";
 import { StickerBadge } from "@/components/Video/StickerBadge";
 import { SceneBackground } from "@/remotion/backgrounds/SceneBackground";
-import { battambangFontFamily } from "../fonts";
+import { battambangFontFamily, poppinsFontFamily } from "../fonts";
 import type { SceneProps } from "./types";
 import { isColorDark } from "@/lib/colorUtils";
 
@@ -44,7 +44,7 @@ export function HighlighterSweep({
         <div
           style={{
             position: "relative",
-            fontFamily: battambangFontFamily,
+            fontFamily: `${poppinsFontFamily}, ${battambangFontFamily}, sans-serif`,
             fontWeight: 700,
             fontSize,
             textAlign,

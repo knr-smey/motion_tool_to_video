@@ -10,6 +10,10 @@ export const LAYOUT_THEME: Record<SceneLayout, LayoutTheme> = {
     label: "Center Impact",
     chipClass: "bg-orange-500/20 border-orange-500/60 text-orange-300",
   },
+  "node-connector": {
+    label: "Node Connector",
+    chipClass: "bg-cyan-500/20 border-cyan-500/60 text-cyan-300",
+  },
   "highlighter-sweep": {
     label: "Highlighter Sweep",
     chipClass: "bg-violet-500/20 border-violet-500/60 text-violet-300",

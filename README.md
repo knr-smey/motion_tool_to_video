@@ -1,4 +1,4 @@
-# KineticCast Khmer (ខ្មែរ) 🎬⚡
+# Smey-Motion (ខ្មែរ) 🎬⚡
 
 > An automated script-to-kinetic-typography video engine tailored for the Khmer language with synchronized contextual animated icons, stickers, and a strict monochrome aesthetic.
 
@@ -6,7 +6,7 @@
 
 ## 📌 Project Overview
 
-**KineticCast Khmer** transforms raw script text (history, artificial intelligence, finance, science, or storytelling) into high-energy, motion-graphic typography videos lasting anywhere from 1 to 10+ minutes. 
+**Smey-Motion** transforms raw script text (history, artificial intelligence, finance, science, or storytelling) into high-energy, motion-graphic typography videos lasting anywhere from 1 to 10+ minutes. 
 
 It eliminates the traditional manual timeline editing workflow by:
 1. **Mathematical Pacing Engine:** Automatically computing on-screen durations from human reading speed without requiring a pre-recorded audio track.
@@ -79,8 +79,8 @@ The player cycles through 4 repeating visual formats to prevent viewer fatigue o
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-username/kinetic-cast-khmer.git
-   cd kinetic-cast-khmer
+   git clone https://github.com/knr-smey/motion_tool_to_video.git
+   cd motion_tool_to_video
    ```
 
 2. **Install dependencies:**
@@ -106,7 +106,7 @@ The player cycles through 4 repeating visual formats to prevent viewer fatigue o
 ## 📦 Project Directory Structure
 
 ```text
-kinetic-cast-khmer/
+smey-motion/
 ├── src/
 │   ├── app/
 │   │   ├── layout.tsx         # Google fonts injection (Moul, Kantumruy Pro, Battambang)

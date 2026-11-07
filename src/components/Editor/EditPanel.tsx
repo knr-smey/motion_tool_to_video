@@ -37,6 +37,13 @@ const ANIMATION_OPTIONS: {
   icon: string;
 }[] = [
   {
+    id: "node-connector",
+    title: "Node Flow",
+    badge: "Tech / API",
+    desc: "Animated point-to-point lines & data packet flow",
+    icon: "🔗",
+  },
+  {
     id: "center-impact",
     title: "Center Impact",
     badge: "Punchy",
@@ -262,6 +269,31 @@ export function EditPanel({
             className="w-full resize-none rounded-lg border border-border/80 bg-surface-raised px-3 py-2 text-xs font-[family-name:var(--font-kantumruy-pro)] text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
             placeholder="Edit text for this scene..."
           />
+        </div>
+
+        {/* Scene Duration in Seconds */}
+        <div className="mt-2 flex items-center justify-between rounded-lg border border-border/60 bg-surface-raised px-2.5 py-1.5 text-xs">
+          <span className="text-muted">Duration</span>
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min={0.6}
+              max={6.0}
+              step={0.1}
+              value={scene.durationSeconds}
+              onChange={(e) => {
+                const val = Number(e.target.value);
+                onUpdateScene(activeSceneIndex, {
+                  durationSeconds: val,
+                  durationInFrames: Math.round(val * 30),
+                });
+              }}
+              className="w-20 accent-accent cursor-pointer"
+            />
+            <span className="font-mono font-bold text-accent tabular-nums w-10 text-right">
+              {scene.durationSeconds.toFixed(1)}s
+            </span>
+          </div>
         </div>
 
         {/* Batch action buttons */}

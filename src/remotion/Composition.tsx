@@ -4,6 +4,7 @@ import { CenterImpact } from "./scenes/CenterImpact";
 import { HighlighterSweep } from "./scenes/HighlighterSweep";
 import { WordCascade } from "./scenes/WordCascade";
 import { CyberScramble } from "./scenes/CyberScramble";
+import { NodeConnector } from "./scenes/NodeConnector";
 import { DEFAULT_BACKGROUND, type BackgroundConfig } from "./backgrounds/types";
 
 export interface KineticCastProps extends Record<string, unknown> {
@@ -16,6 +17,7 @@ const SCENE_COMPONENTS = {
   "highlighter-sweep": HighlighterSweep,
   "word-cascade": WordCascade,
   "cyber-scramble": CyberScramble,
+  "node-connector": NodeConnector,
 } as const;
 
 export function withStartFrames(scenes: Scene[]): Array<{ scene: Scene; from: number }> {

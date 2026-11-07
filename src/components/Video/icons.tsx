@@ -1,11 +1,3 @@
-// Hand-written inline SVGs for use inside Remotion scenes.
-//
-// lucide-react's forwardRef icon components crash with a React error #130
-// ("invalid element type") when rendered inside Remotion's headless Chromium
-// render pipeline, even though they render fine in the Next.js UI chrome
-// and in plain React. These plain function components sidestep that by
-// avoiding forwardRef/exotic component types entirely.
-
 import type { ReactElement } from "react";
 import type { StickerCategory } from "@/lib/stickerMatcher";
 
@@ -78,12 +70,82 @@ export function SparklesIcon(props: IconProps) {
   );
 }
 
-// Resolved from a scene's sticker `category` at render time (see the note
-// in lib/stickerMatcher.ts on why icon components can't live in scene data).
+export function ApiIcon(props: IconProps) {
+  return (
+    <svg {...iconProps(props)}>
+      <rect x="2" y="5" width="8" height="6" rx="1.5" />
+      <rect x="14" y="13" width="8" height="6" rx="1.5" />
+      <path d="M10 8h4a2 2 0 0 1 2 2v3" />
+      <polyline points="12 6 10 8 12 10" />
+      <path d="M14 16h-4a2 2 0 0 1-2-2v-3" />
+      <polyline points="12 18 14 16 12 14" />
+    </svg>
+  );
+}
+
+export function ServerIcon(props: IconProps) {
+  return (
+    <svg {...iconProps(props)}>
+      <rect x="2" y="3" width="20" height="7" rx="2" />
+      <rect x="2" y="14" width="20" height="7" rx="2" />
+      <line x1="6" y1="6.5" x2="6.01" y2="6.5" />
+      <line x1="10" y1="6.5" x2="10.01" y2="6.5" />
+      <line x1="6" y1="17.5" x2="6.01" y2="17.5" />
+      <line x1="10" y1="17.5" x2="10.01" y2="17.5" />
+    </svg>
+  );
+}
+
+export function DatabaseIcon(props: IconProps) {
+  return (
+    <svg {...iconProps(props)}>
+      <ellipse cx="12" cy="5" rx="9" ry="3" />
+      <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5" />
+      <path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3" />
+    </svg>
+  );
+}
+
+export function CodeIcon(props: IconProps) {
+  return (
+    <svg {...iconProps(props)}>
+      <polyline points="16 18 22 12 16 6" />
+      <polyline points="8 6 2 12 8 18" />
+    </svg>
+  );
+}
+
+export function NetworkIcon(props: IconProps) {
+  return (
+    <svg {...iconProps(props)}>
+      <rect x="16" y="16" width="6" height="6" rx="1" />
+      <rect x="2" y="16" width="6" height="6" rx="1" />
+      <rect x="9" y="2" width="6" height="6" rx="1" />
+      <path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3" />
+      <path d="M12 12V8" />
+    </svg>
+  );
+}
+
+export function SecurityIcon(props: IconProps) {
+  return (
+    <svg {...iconProps(props)}>
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <path d="M9 12l2 2 4-4" />
+    </svg>
+  );
+}
+
 export const STICKER_ICON_BY_CATEGORY: Record<StickerCategory, (props: IconProps) => ReactElement> = {
   history: LandmarkIcon,
   technology: CpuIcon,
   finance: BanknoteIcon,
   science: RocketIcon,
+  api: ApiIcon,
+  server: ServerIcon,
+  database: DatabaseIcon,
+  code: CodeIcon,
+  network: NetworkIcon,
+  security: SecurityIcon,
   general: SparklesIcon,
 };

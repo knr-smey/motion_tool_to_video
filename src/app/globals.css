@@ -25,6 +25,7 @@
   --color-muted: var(--muted);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --font-poppins: var(--font-poppins);
   --font-moul: var(--font-moul);
   --font-battambang: var(--font-battambang);
   --font-kantumruy-pro: var(--font-kantumruy-pro);
@@ -33,5 +34,28 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-kantumruy-pro), Arial, Helvetica, sans-serif;
+  font-family: var(--font-poppins), var(--font-kantumruy-pro), system-ui, -apple-system, sans-serif;
+}
+
+/* Ensure cursor pointer on all clickable interactive items */
+button,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+input[type="range"],
+input[type="color"],
+input[type="checkbox"],
+input[type="radio"],
+select,
+summary,
+.cursor-pointer {
+  cursor: pointer;
+}
+
+button:disabled,
+[role="button"][aria-disabled="true"],
+input:disabled,
+select:disabled {
+  cursor: not-allowed;
 }

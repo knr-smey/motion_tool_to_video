@@ -31,10 +31,12 @@ export type SceneLayout =
   | "center-impact"
   | "highlighter-sweep"
   | "word-cascade"
-  | "cyber-scramble";
+  | "cyber-scramble"
+  | "node-connector";
 
 export const LAYOUT_CYCLE: SceneLayout[] = [
   "center-impact",
+  "node-connector",
   "highlighter-sweep",
   "word-cascade",
   "cyber-scramble",
@@ -61,15 +63,15 @@ function countWords(sentence: string): number {
 
 export function buildScenes(
   script: string,
-  options: { wpm?: number; fps?: number } = {}
+  options: { durationSeconds?: number; wpm?: number; fps?: number } = {}
 ): Scene[] {
-  const wpm = clampWpm(options.wpm ?? 145);
+  const durationParam = options.durationSeconds ?? (options.wpm ? options.wpm : 1.8);
   const fps = options.fps ?? 30;
 
   return splitIntoSentences(script).map((text, index) => {
     const wordCount = countWords(text);
     const punctuation = countPunctuation(text);
-    const durationSeconds = computeSceneDurationSeconds(wordCount, punctuation, wpm);
+    const durationSeconds = computeSceneDurationSeconds(wordCount, punctuation, durationParam);
 
     return {
       id: `scene-${index}`,
@@ -79,6 +81,13 @@ export function buildScenes(
       durationInFrames: secondsToFrames(durationSeconds, fps),
       stickers: matchStickers(text),
       layout: LAYOUT_CYCLE[index % LAYOUT_CYCLE.length],
+      backgroundColor: index % 2 === 0 ? "#000000" : "#0d0f14",
+      textColor: "#FFFFFF",
+      lineHeight: 1.35,
+      fontSize: 76,
+      positionX: 0,
+      positionY: 0,
+      textAlign: "center",
     };
   });
 }

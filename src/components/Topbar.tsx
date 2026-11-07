@@ -2,11 +2,11 @@ export function Topbar() {
   return (
     <header className="flex items-center justify-between border-b border-border bg-surface px-6 py-3">
       <div className="flex items-center gap-3">
-        <span className="flex h-8 w-8 items-center justify-center rounded-md bg-accent text-accent-foreground font-[family-name:var(--font-moul)] text-sm">
-          ក
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-accent-foreground font-black text-xs tracking-wider shadow-sm">
+          SM
         </span>
         <div className="flex flex-col leading-tight">
-          <span className="text-sm font-semibold">KineticCast Khmer</span>
+          <span className="text-sm font-semibold">Smey-Motion</span>
           <span className="text-xs text-muted">Script-to-video engine</span>
         </div>
       </div>

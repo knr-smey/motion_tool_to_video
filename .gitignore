@@ -24,6 +24,10 @@
 .DS_Store
 *.pem
 
+# AI agent/tool local state
+.claude
+.codex
+
 # debug
 npm-debug.log*
 yarn-debug.log*

@@ -1,7 +1,7 @@
 import { interpolate, spring, useCurrentFrame, useVideoConfig, AbsoluteFill } from "remotion";
 import { StickerBadge } from "@/components/Video/StickerBadge";
 import { SceneBackground } from "@/remotion/backgrounds/SceneBackground";
-import { moulFontFamily } from "../fonts";
+import { moulFontFamily, poppinsFontFamily } from "../fonts";
 import type { SceneProps } from "./types";
 import { isColorDark } from "@/lib/colorUtils";
 
@@ -48,7 +48,7 @@ export function CenterImpact({
       >
         <div
           style={{
-            fontFamily: moulFontFamily,
+            fontFamily: `${poppinsFontFamily}, ${moulFontFamily}, sans-serif`,
             fontSize,
             color: effectiveText,
             textAlign,
