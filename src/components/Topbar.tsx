@@ -154,7 +154,7 @@ export function Topbar({
         <button
           type="button"
           onClick={handleExportClick}
-          className="flex items-center gap-1.5 rounded-lg bg-[#2563EB] hover:bg-blue-600 px-3.5 py-1 text-xs font-semibold text-white shadow-md shadow-blue-600/30 transition cursor-pointer active:scale-95"
+          className="flex items-center gap-1.5 rounded-lg bg-[#f1591f] hover:bg-orange-600 px-3.5 py-1 text-xs font-semibold text-white shadow-md shadow-orange-600/30 transition cursor-pointer active:scale-95"
           title="Export Video"
         >
           <Download size={13} />

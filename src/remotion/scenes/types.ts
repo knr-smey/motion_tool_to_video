@@ -8,10 +8,12 @@ export interface SceneProps {
   background: BackgroundConfig;
   backgroundColor?: string;
   textColor?: string;
+  fontFamily?: string;
   lineHeight?: number;
   fontSize?: number;
   positionX?: number;
   positionY?: number;
   textAlign?: "left" | "center" | "right";
   nodes?: [string, string, string];
+  textAnimation?: import("@/remotion/textMotion/types").TextMotionConfig;
 }

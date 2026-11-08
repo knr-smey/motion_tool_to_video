@@ -23,7 +23,8 @@ interface PlayerDeckProps {
   backgroundColor?: string;
   playerRef: RefObject<PlayerRef | null>;
   activeSceneIndex?: number;
-  onUpdatePosition?: (x: number, y: number) => void;
+  onUpdatePosition?: (x: number, y: number, isFinal?: boolean) => void;
+  onUpdateText?: (index: number, newText: string) => void;
   aspectRatio?: AspectRatio;
   onSelectScene?: (index: number) => void;
 }
@@ -37,11 +38,11 @@ export function PlayerDeck({
   playerRef,
   activeSceneIndex = 0,
   onUpdatePosition,
+  onUpdateText,
   aspectRatio = "16:9",
   onSelectScene,
 }: PlayerDeckProps) {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [showGuide, setShowGuide] = useState(false);
 
   useEffect(() => {
     const player = playerRef.current;
@@ -114,25 +115,21 @@ export function PlayerDeck({
           playerRef={playerRef}
           activeSceneIndex={activeSceneIndex}
           onUpdatePosition={onUpdatePosition}
-          showGuide={showGuide}
+          onUpdateText={onUpdateText}
         />
       </div>
 
       {/* Centered Minimal Playback Controls (Matching Reference Screenshot) */}
       <div className="w-full max-w-4xl px-4 flex items-center justify-between shrink-0 h-10 select-none">
-        {/* Left: Drag Handle Indicator (Off by default) */}
+        {/* Left: Reset Position to Center Button */}
         <button
           type="button"
-          onClick={() => setShowGuide((prev) => !prev)}
-          className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium transition cursor-pointer ${
-            showGuide
-              ? "bg-[#f1591f]/15 text-[#f1591f] border border-[#f1591f]/40"
-              : "text-muted hover:text-foreground hover:bg-white/5 border border-transparent"
-          }`}
-          title="Toggle on-canvas bounding box handles"
+          onClick={() => onUpdatePosition?.(0, 0)}
+          className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium text-muted hover:text-white hover:bg-white/5 border border-border/40 transition cursor-pointer"
+          title="Reset text position to center (0, 0)"
         >
-          <Move size={12} />
-          <span>Transform Box {showGuide ? "On" : "Off"}</span>
+          <Move size={12} className="text-[#00b4d8]" />
+          <span>Center Text</span>
         </button>
 
         {/* Center: |<<  ▶/❚❚  >>| */}

@@ -23,11 +23,14 @@ import {
   RotateCcw,
   Check,
   CopyCheck,
+  ChevronDown,
 } from "lucide-react";
 import type { Scene, SceneLayout } from "@/lib/segmentation";
 import type { BackgroundConfig, BackgroundStyle } from "@/remotion/backgrounds/types";
 import { PRESETS } from "@/lib/presets";
 import type { NavTab } from "./LeftActivityDock";
+import { TextAnimationPanel } from "./TextAnimationPanel";
+import { UploadsPanel } from "./UploadsPanel";
 
 interface InspectorDrawerProps {
   activeTab: NavTab;
@@ -55,26 +58,6 @@ interface InspectorDrawerProps {
   onOpenRecordModal?: (index: number) => void;
 }
 
-interface TextAnimationOption {
-  id: SceneLayout;
-  title: string;
-  previewClass: string;
-  previewType: "pop" | "rise" | "pan" | "breathe" | "sweep" | "cascade" | "scramble" | "typewriter" | "nodes" | "none";
-}
-
-const TEXT_ANIMATIONS: TextAnimationOption[] = [
-  { id: "static-clean", title: "None", previewClass: "", previewType: "none" },
-  { id: "fade-rise", title: "Fade", previewClass: "anim-hover-rise", previewType: "rise" },
-  { id: "pan-slide", title: "Pan", previewClass: "anim-hover-pan", previewType: "pan" },
-  { id: "center-impact", title: "Pop", previewClass: "anim-hover-pop", previewType: "pop" },
-  { id: "breathe-float", title: "Breathe", previewClass: "anim-hover-breathe", previewType: "breathe" },
-  { id: "highlighter-sweep", title: "Wipe", previewClass: "anim-hover-sweep", previewType: "sweep" },
-  { id: "word-cascade", title: "Cascade", previewClass: "anim-hover-rise", previewType: "cascade" },
-  { id: "cyber-scramble", title: "Scramble", previewClass: "anim-hover-breathe", previewType: "scramble" },
-  { id: "node-connector", title: "Node Flow", previewClass: "anim-hover-pop", previewType: "nodes" },
-  { id: "typewriter", title: "Typewriter", previewClass: "anim-hover-typewriter", previewType: "typewriter" },
-];
-
 const BG_COLOR_SWATCHES = [
   { label: "Pitch Black", color: "#000000" },
   { label: "Deep Night", color: "#0B0F19" },
@@ -92,59 +75,6 @@ const BG_STYLE_OPTIONS: { id: BackgroundStyle; label: string }[] = [
   { id: "galaxy", label: "Galaxy" },
   { id: "image", label: "Image" },
 ];
-
-function renderAbcPreview(opt: TextAnimationOption) {
-  switch (opt.previewType) {
-    case "none":
-      return <span className="text-sm font-bold text-foreground/80 font-sans">Abc</span>;
-    case "rise":
-      return <span className="abc-text text-sm font-bold text-accent font-sans transition-transform">Abc</span>;
-    case "pan":
-      return <span className="abc-text text-sm font-bold text-accent font-sans transition-transform">Abc</span>;
-    case "pop":
-      return <span className="abc-text text-sm font-extrabold text-accent font-sans tracking-tight transition-transform">Abc</span>;
-    case "breathe":
-      return <span className="abc-text text-sm font-bold text-accent font-sans transition-transform">Abc</span>;
-    case "sweep":
-      return (
-        <div className="relative inline-block">
-          <span className="abc-text text-sm font-bold text-accent font-sans">Abc</span>
-          <div className="absolute inset-x-0 bottom-0 h-1 bg-accent/40 rounded-sm pointer-events-none" />
-        </div>
-      );
-    case "cascade":
-      return (
-        <div className="flex items-center gap-0.5 text-sm font-bold text-accent font-sans">
-          <span className="translate-y-[-1px]">A</span>
-          <span className="translate-y-[0px]">b</span>
-          <span className="translate-y-[2px]">c</span>
-        </div>
-      );
-    case "scramble":
-      return (
-        <div className="flex items-center text-sm font-mono font-bold text-accent">
-          <span>A</span>
-          <span className="text-orange-300 text-xs">#</span>
-          <span>c</span>
-        </div>
-      );
-    case "nodes":
-      return (
-        <div className="relative flex items-center justify-center">
-          <span className="text-sm font-bold text-accent font-sans">Abc</span>
-          <span className="absolute -top-0.5 -right-0.5 h-1 w-1 rounded-full bg-accent animate-ping" />
-          <span className="absolute -bottom-0.5 -left-0.5 h-1 w-1 rounded-full bg-accent" />
-        </div>
-      );
-    case "typewriter":
-      return (
-        <div className="abc-typewriter-container flex items-center overflow-hidden whitespace-nowrap text-sm font-bold text-accent font-sans">
-          <span>Abc</span>
-          <span className="h-3 w-0.5 bg-accent ml-0.5 animate-pulse" />
-        </div>
-      );
-  }
-}
 
 export function InspectorDrawer({
   activeTab,
@@ -179,6 +109,7 @@ export function InspectorDrawer({
   const activePosX = scene?.positionX ?? 0;
   const activePosY = scene?.positionY ?? 0;
   const activeAlign = scene?.textAlign ?? "center";
+  const activeFontFamily = scene?.fontFamily ?? "Moul";
   const activeBackground = globalBackground ?? scene?.background ?? { style: "none", imageDataUrl: null };
 
   const handleApplyPartialToAll = (sectionKey: string, updates: Partial<Scene>) => {
@@ -241,7 +172,7 @@ export function InspectorDrawer({
       {/* Scrollable Panel Body */}
       <div
         key={activeTab}
-        className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 scrollbar-thin text-xs transition-opacity duration-150"
+        className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 mac-scrollbar text-xs transition-opacity duration-150"
       >
         {/* ============================================================== */}
         {/* TAB 1: TEXT INSPECTOR (Matching reference screenshot)         */}
@@ -327,7 +258,7 @@ export function InspectorDrawer({
                 </div>
                 <div className="flex items-center rounded-lg border border-border/80 bg-surface-raised/80 px-2 py-1">
                   <span className="text-[10px] text-muted mr-1">∠</span>
-                  <span className="font-mono text-[11px] text-muted">0°</span>
+                  <input aria-label="Rotation" type="number" value={scene?.rotation ?? 0} onChange={(e) => onUpdateScene(activeSceneIndex, { rotation: Number(e.target.value) })} className="w-full bg-transparent font-mono text-[11px] text-foreground focus:outline-none" />
                 </div>
               </div>
             </div>
@@ -359,7 +290,7 @@ export function InspectorDrawer({
 
                 <div className="flex-1 flex items-center justify-between rounded-lg border border-border/80 bg-surface-raised/80 px-2 py-1 text-[11px]">
                   <span className="text-muted">Line</span>
-                  <span className="font-mono font-semibold text-foreground">{activeLineHeight.toFixed(2)}x</span>
+                  <input aria-label="Line height" type="number" step="0.05" value={activeLineHeight} onChange={(e) => onUpdateScene(activeSceneIndex, { lineHeight: Number(e.target.value) })} className="w-12 bg-transparent text-right font-mono font-semibold text-foreground" />
                 </div>
               </div>
             </div>
@@ -408,87 +339,191 @@ export function InspectorDrawer({
               <div className="h-3.5 w-px bg-border/60 mx-0.5" />
               <button
                 type="button"
-                className="flex-1 flex items-center justify-center py-1 rounded text-muted hover:text-foreground cursor-pointer"
+                onClick={() => onUpdateScene(activeSceneIndex, { underline: !scene?.underline })}
+                aria-pressed={!!scene?.underline}
+                className={`flex-1 flex items-center justify-center py-1 rounded cursor-pointer ${scene?.underline ? "bg-accent/20 text-accent" : "text-muted hover:text-foreground"}`}
                 title="Underline"
               >
                 <Underline size={13} />
               </button>
               <button
                 type="button"
-                className="flex-1 flex items-center justify-center py-1 rounded text-muted hover:text-foreground cursor-pointer"
+                onClick={() => onUpdateScene(activeSceneIndex, { italic: !scene?.italic })}
+                aria-pressed={!!scene?.italic}
+                className={`flex-1 flex items-center justify-center py-1 rounded cursor-pointer ${scene?.italic ? "bg-accent/20 text-accent" : "text-muted hover:text-foreground"}`}
                 title="Italic"
               >
                 <Italic size={13} />
               </button>
               <button
                 type="button"
-                className="flex-1 flex items-center justify-center py-1 rounded text-muted hover:text-foreground cursor-pointer"
+                onClick={() => onUpdateScene(activeSceneIndex, { bold: !scene?.bold })}
+                aria-pressed={!!scene?.bold}
+                className={`flex-1 flex items-center justify-center py-1 rounded cursor-pointer ${scene?.bold ? "bg-accent/20 text-accent" : "text-muted hover:text-foreground"}`}
                 title="Uppercase"
               >
                 <CaseUpper size={14} />
               </button>
             </div>
 
-            {/* Text Animations Grid (Canva-Style Abc Cards) */}
-            <div className="flex flex-col gap-2 rounded-xl border border-border/80 bg-surface-raised/40 p-2.5">
-              <div className="flex items-center justify-between pb-1 border-b border-border/60">
-                <div className="flex items-center gap-1.5">
-                  <Sparkles size={13} className="text-accent" />
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-foreground">Text Animations</span>
-                </div>
-                <span className="text-[10px] font-semibold text-accent font-mono bg-accent/15 px-1.5 py-0.2 rounded-full">
-                  {TEXT_ANIMATIONS.find((a) => a.id === activeLayout)?.title ?? "Pop"}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-3 gap-1.5 pt-0.5">
-                {TEXT_ANIMATIONS.map((opt) => {
-                  const isSelected = activeLayout === opt.id;
-                  return (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => onUpdateScene(activeSceneIndex, { layout: opt.id })}
-                      className={`group flex flex-col items-center cursor-pointer select-none transition ${opt.previewClass}`}
+            {/* Sleek Modern Dark Typography Settings Card (Figma/Linear Style) */}
+            <div className="rounded-2xl border border-white/[0.08] bg-[#16171b] p-4 shadow-xl shadow-black/40">
+              <div className="grid grid-cols-2 gap-3.5">
+                {/* Row 1: Font Family */}
+                <div>
+                  <label className="block text-[12px] font-medium text-[#94a3b8] mb-1.5">
+                    Font family
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={activeFontFamily}
+                      onChange={(e) => onUpdateScene(activeSceneIndex, { fontFamily: e.target.value })}
+                      className="h-[38px] w-full rounded-lg bg-[#1c1d22] border border-white/[0.08] text-[13px] text-white font-medium pl-3 pr-8 appearance-none cursor-pointer transition-colors hover:border-white/20 focus:outline-none focus:ring-2 focus:ring-[#f1591f]/30 focus:border-[#f1591f]/60"
                     >
-                      <div
-                        className={`relative h-12 w-full rounded-lg border flex items-center justify-center transition-all shadow-sm ${
-                          isSelected
-                            ? "border-accent ring-2 ring-accent/60 bg-accent/15"
-                            : "border-border/80 bg-surface-raised hover:border-accent/50 hover:bg-surface-raised/90"
-                        }`}
-                      >
-                        {renderAbcPreview(opt)}
-                        {isSelected && (
-                          <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
-                        )}
-                      </div>
-                      <span className={`mt-1 text-[10px] text-center truncate w-full ${isSelected ? "text-accent font-bold" : "text-foreground/80 font-medium group-hover:text-foreground"}`}>
-                        {opt.title}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+                      {["Moul", "Poppins", "Battambang", "Kantumruy Pro"].map((font) => (
+                        <option key={font} value={font} className="bg-[#1c1d22] text-white">
+                          {font}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none" />
+                  </div>
+                </div>
 
-              <button
-                type="button"
-                onClick={() => handleApplyPartialToAll("animation", { layout: activeLayout })}
-                className="w-full mt-1 flex items-center justify-center gap-1.5 rounded-lg border border-border bg-surface-raised py-1 px-2 text-[10px] font-semibold text-foreground transition hover:border-accent hover:text-accent cursor-pointer"
-              >
-                {copiedSection === "animation" ? (
-                  <>
-                    <Check size={11} className="text-emerald-400" />
-                    <span className="text-emerald-400">Applied to All Scenes!</span>
-                  </>
-                ) : (
-                  <>
-                    <CopyCheck size={11} />
-                    <span>Apply Animation to All Scenes</span>
-                  </>
-                )}
-              </button>
+                {/* Row 1: Weight */}
+                <div>
+                  <label className="block text-[12px] font-medium text-[#94a3b8] mb-1.5">
+                    Weight
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={scene?.fontWeight ?? 700}
+                      onChange={(e) => onUpdateScene(activeSceneIndex, { fontWeight: Number(e.target.value) })}
+                      className="h-[38px] w-full rounded-lg bg-[#1c1d22] border border-white/[0.08] text-[13px] text-white font-medium pl-3 pr-8 appearance-none cursor-pointer transition-colors hover:border-white/20 focus:outline-none focus:ring-2 focus:ring-[#f1591f]/30 focus:border-[#f1591f]/60"
+                    >
+                      {[400, 600, 700, 800].map((weight) => (
+                        <option key={weight} value={weight} className="bg-[#1c1d22] text-white">
+                          {weight}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none" />
+                  </div>
+                </div>
+
+                {/* Row 2: Text Background Color Swatch */}
+                <div>
+                  <label className="block text-[12px] font-medium text-[#94a3b8] mb-1.5">
+                    Text background
+                  </label>
+                  <label className="relative h-[38px] w-full rounded-lg bg-[#1c1d22] border border-white/[0.08] px-2.5 flex items-center justify-between transition-colors hover:border-white/20 focus-within:ring-2 focus-within:ring-[#f1591f]/30 focus-within:border-[#f1591f]/60 cursor-pointer">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="h-5 w-5 rounded-md border border-white/20 shadow-sm shrink-0"
+                        style={{ backgroundColor: scene?.textBackgroundColor ?? "#000000" }}
+                      />
+                      <span className="font-mono text-[12px] text-white/90 uppercase font-medium">
+                        {scene?.textBackgroundColor ?? "#000000"}
+                      </span>
+                    </div>
+                    <input
+                      type="color"
+                      value={scene?.textBackgroundColor ?? "#000000"}
+                      onChange={(e) => onUpdateScene(activeSceneIndex, { textBackgroundColor: e.target.value })}
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    />
+                  </label>
+                </div>
+
+                {/* Row 2: Opacity */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[12px] font-medium text-[#94a3b8]">Opacity</span>
+                    <span className="text-[11px] font-mono font-semibold text-orange-400 bg-orange-500/10 border border-orange-500/20 px-1.5 py-0.2 rounded-md">
+                      {Math.round((scene?.opacity ?? 1) * 100)}%
+                    </span>
+                  </div>
+                  <div className="h-[38px] rounded-lg bg-[#1c1d22] border border-white/[0.08] px-3 flex items-center">
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.01"
+                      value={scene?.opacity ?? 1}
+                      onChange={(e) => onUpdateScene(activeSceneIndex, { opacity: Number(e.target.value) })}
+                      className="w-full h-1.5 rounded-full bg-white/10 appearance-none cursor-pointer accent-[#f1591f] hover:accent-orange-400 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Row 3: Letter Spacing */}
+                <div>
+                  <label className="block text-[12px] font-medium text-[#94a3b8] mb-1.5">
+                    Letter spacing
+                  </label>
+                  <div className="relative flex items-center">
+                    <input
+                      type="number"
+                      step="0.5"
+                      value={scene?.letterSpacing ?? 0}
+                      onChange={(e) => onUpdateScene(activeSceneIndex, { letterSpacing: Number(e.target.value) })}
+                      className="h-[38px] w-full rounded-lg bg-[#1c1d22] border border-white/[0.08] text-[13px] text-white font-medium pl-3 pr-8 transition-colors hover:border-white/20 focus:outline-none focus:ring-2 focus:ring-[#f1591f]/30 focus:border-[#f1591f]/60"
+                    />
+                    <span className="absolute right-3 text-[11px] font-mono text-white/40 pointer-events-none select-none">
+                      px
+                    </span>
+                  </div>
+                </div>
+
+                {/* Row 3: Text Outline */}
+                <div>
+                  <label className="block text-[12px] font-medium text-[#94a3b8] mb-1.5">
+                    Text outline
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="2px #000000"
+                    value={scene?.textStroke ?? ""}
+                    onChange={(e) => onUpdateScene(activeSceneIndex, { textStroke: e.target.value || undefined })}
+                    className="h-[38px] w-full rounded-lg bg-[#1c1d22] border border-white/[0.08] text-[13px] text-white font-medium px-3 placeholder:text-white/25 transition-colors hover:border-white/20 focus:outline-none focus:ring-2 focus:ring-[#f1591f]/30 focus:border-[#f1591f]/60"
+                  />
+                </div>
+
+                {/* Row 4: Shadow Toggle */}
+                <div className="col-span-2 flex items-center justify-between rounded-xl bg-[#1c1d22]/60 border border-white/[0.06] px-3.5 py-2.5 transition-colors hover:border-white/[0.12]">
+                  <div>
+                    <span className="block text-[12px] font-medium text-white/90">Shadow</span>
+                    <span className="block text-[10px] text-white/40">Soft drop shadow effect</span>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={!!scene?.textShadow}
+                    onClick={() => onUpdateScene(activeSceneIndex, { textShadow: !scene?.textShadow })}
+                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#f1591f]/30 ${
+                      scene?.textShadow ? "bg-[#f1591f]" : "bg-white/15"
+                    }`}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition duration-200 ease-in-out ${
+                        scene?.textShadow ? "translate-x-4" : "translate-x-0"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
             </div>
+
+            {/* Professional 50 Text Motion Animation System */}
+            {scene && (
+              <TextAnimationPanel
+                scene={scene}
+                sceneIndex={activeSceneIndex}
+                onUpdateScene={onUpdateScene}
+                onApplyToAllScenes={onApplyToAllScenes}
+              />
+            )}
 
             {/* Fill / Text Color Picker with Hex Code & Opacity */}
             <div className="rounded-xl border border-border/80 bg-surface-raised/40 p-2.5 flex flex-col gap-2">
@@ -603,7 +638,7 @@ export function InspectorDrawer({
         {/* ============================================================== */}
         {/* TAB 3: CANVAS BACKGROUND (Full Video)                          */}
         {/* ============================================================== */}
-        {(activeTab === "canvas" || activeTab === "uploads") && (
+        {activeTab === "canvas" && (
           <>
             <div>
               <div className="text-[11px] font-medium text-muted mb-1.5">Background Effect (Full Video)</div>
@@ -626,7 +661,7 @@ export function InspectorDrawer({
             </div>
 
             {/* Image upload */}
-            {(activeBackground.style === "image" || activeTab === "uploads") && (
+            {activeBackground.style === "image" && (
               <div className="rounded-xl border border-dashed border-border/80 p-3 text-center bg-surface-raised/30">
                 {activeBackground.imageDataUrl ? (
                   <div className="relative overflow-hidden rounded-lg border border-border">
@@ -729,6 +764,11 @@ export function InspectorDrawer({
             </div>
           </div>
         )}
+
+        {/* ============================================================== */}
+        {/* TAB 5: UPLOADS & MEDIA ASSETS                                  */}
+        {/* ============================================================== */}
+        {activeTab === "uploads" && <UploadsPanel />}
 
         {/* Reset button at bottom of drawer */}
         <div className="pt-2 border-t border-border/60 mt-auto flex items-center justify-between">

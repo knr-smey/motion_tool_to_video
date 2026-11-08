@@ -37,6 +37,38 @@ body {
   font-family: var(--font-poppins), var(--font-kantumruy-pro), system-ui, -apple-system, sans-serif;
 }
 
+/* Slim, floating scrollbar for the inspector, matching macOS dark mode. */
+.mac-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
+  scrollbar-gutter: auto;
+}
+
+.mac-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.mac-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mac-scrollbar::-webkit-scrollbar-thumb {
+  min-height: 36px;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.28);
+  background-clip: padding-box;
+}
+
+.mac-scrollbar:hover {
+  scrollbar-color: rgba(255, 255, 255, 0.42) transparent;
+}
+
+.mac-scrollbar:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.42);
+}
+
 /* Ensure cursor pointer on all clickable interactive items */
 button,
 [role="button"],

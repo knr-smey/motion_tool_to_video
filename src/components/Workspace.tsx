@@ -1,11 +1,14 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { PlayerRef } from "@remotion/player";
 import { Topbar } from "@/components/Topbar";
 import { LeftActivityDock, type NavTab } from "@/components/Editor/LeftActivityDock";
 import { InspectorDrawer } from "@/components/Editor/InspectorDrawer";
 import { ScenePlaylist } from "@/components/Editor/ScenePlaylist";
+import { MultiTrackTimeline } from "@/components/Editor/MultiTrackTimeline";
+import { scenesToTracks } from "@/types/timeline";
+import { timelineActions } from "@/lib/timelineStore";
 import { PlayerDeck } from "@/components/Video/PlayerDeck";
 import type { AspectRatio } from "@/components/Video/KineticStage";
 import { buildScenes, type Scene } from "@/lib/segmentation";
@@ -56,6 +59,14 @@ export function Workspace() {
     });
   }, [baseScenes, sceneOverrides]);
 
+  const [timelineMode, setTimelineMode] = useState<"scenes" | "multitrack">("multitrack");
+
+  // Sync scenes into the multi-track timeline store
+  useEffect(() => {
+    const tracks = scenesToTracks(scenes, FPS);
+    timelineActions.setTracks(tracks);
+  }, [scenes]);
+
   const totalDurationInFrames = useMemo(() => getTotalDurationInFrames(scenes), [scenes]);
 
   // Safe active scene index clamping
@@ -76,10 +87,12 @@ export function Workspace() {
     [scenes]
   );
 
-  const handleUpdateScene = useCallback((index: number, updates: Partial<Scene>) => {
+  const handleUpdateScene = useCallback((index: number, updates: Partial<Scene>, recordHistory = true) => {
     setSceneOverrides((prev) => {
-      setHistory((h) => [...h.slice(-15), prev]);
-      setRedoStack([]);
+      if (recordHistory) {
+        setHistory((h) => [...h.slice(-15), prev]);
+        setRedoStack([]);
+      }
       return {
         ...prev,
         [index]: {
@@ -91,10 +104,25 @@ export function Workspace() {
   }, []);
 
   const handleUpdatePosition = useCallback(
-    (x: number, y: number) => {
-      handleUpdateScene(safeActiveIndex, { positionX: x, positionY: y });
+    (x: number, y: number, isFinal = false) => {
+      handleUpdateScene(safeActiveIndex, { positionX: x, positionY: y }, isFinal);
     },
     [handleUpdateScene, safeActiveIndex]
+  );
+
+  const handleUpdateSceneText = useCallback(
+    (index: number, newText: string) => {
+      handleUpdateScene(index, { text: newText });
+      setScript((prev) => {
+        const lines = prev.split("\n");
+        if (lines[index] !== undefined) {
+          lines[index] = newText;
+          return lines.join("\n");
+        }
+        return prev;
+      });
+    },
+    [handleUpdateScene]
   );
 
   const handleApplyToAllScenes = useCallback(
@@ -314,23 +342,64 @@ export function Workspace() {
               playerRef={playerRef}
               activeSceneIndex={safeActiveIndex}
               onUpdatePosition={handleUpdatePosition}
+              onUpdateText={handleUpdateSceneText}
               aspectRatio={aspectRatio}
               onSelectScene={handleSelectScene}
             />
           </div>
 
-          {/* Bottom Pro Multi-Track Timeline Dock (Edge-to-Edge) */}
-          <ScenePlaylist
-            scenes={scenes}
-            playerRef={playerRef}
-            activeSceneIndex={safeActiveIndex}
-            onSelectScene={handleSelectScene}
-            onOpenRecordModal={handleOpenRecordModal}
-            onDuplicateScene={handleDuplicateScene}
-            onDeleteScene={handleDeleteScene}
-            onSplitScene={handleSplitScene}
-            onUpdateSceneDuration={handleUpdateSceneDuration}
-          />
+          {/* Timeline View Mode Bar */}
+          <div className="h-8 px-4 bg-[#141518] border-t border-white/[0.08] flex items-center justify-between text-xs shrink-0 select-none">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-white/40">View Mode:</span>
+              <div className="flex items-center bg-[#1c1d22] p-0.5 rounded-lg border border-white/[0.08]">
+                <button
+                  type="button"
+                  onClick={() => setTimelineMode("multitrack")}
+                  className={`px-2.5 py-0.5 rounded-md text-[10px] font-semibold transition cursor-pointer ${
+                    timelineMode === "multitrack"
+                      ? "bg-[#f1591f] text-white shadow-sm"
+                      : "text-white/60 hover:text-white"
+                  }`}
+                >
+                  Multi-Track Pro
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTimelineMode("scenes")}
+                  className={`px-2.5 py-0.5 rounded-md text-[10px] font-semibold transition cursor-pointer ${
+                    timelineMode === "scenes"
+                      ? "bg-[#f1591f] text-white shadow-sm"
+                      : "text-white/60 hover:text-white"
+                  }`}
+                >
+                  Scenes Playlist
+                </button>
+              </div>
+            </div>
+            <span className="text-[10px] text-white/40 hidden sm:inline">CapCut / Canva Multi-Track Timeline</span>
+          </div>
+
+          {/* Bottom Pro Timeline Dock (Edge-to-Edge) */}
+          {timelineMode === "multitrack" ? (
+            <MultiTrackTimeline
+              playerRef={playerRef}
+              totalDurationInFrames={totalDurationInFrames}
+              fps={FPS}
+            />
+          ) : (
+            <ScenePlaylist
+              scenes={scenes}
+              playerRef={playerRef}
+              activeSceneIndex={safeActiveIndex}
+              onSelectScene={handleSelectScene}
+              onOpenRecordModal={handleOpenRecordModal}
+              onDuplicateScene={handleDuplicateScene}
+              onDeleteScene={handleDeleteScene}
+              onSplitScene={handleSplitScene}
+              onUpdateSceneDuration={handleUpdateSceneDuration}
+            />
+          )}
         </main>
       </div>
 

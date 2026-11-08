@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import type { Scene } from "@/lib/segmentation";
 import { withStartFrames } from "@/remotion/Composition";
+import { getPresetDef } from "@/remotion/textMotion/presets";
 
 interface ScenePlaylistProps {
   scenes: Scene[];
@@ -414,7 +415,9 @@ export function ScenePlaylist({
                 >
                   <div className="flex items-center gap-1.5 text-[10px] text-zinc-300 font-mono truncate">
                     <span className="font-bold text-white">#{index + 1}</span>
-                    <span className="truncate text-zinc-400 text-[10px]">{scene.layout}</span>
+                    <span className="truncate text-zinc-300 text-[10px] font-sans font-medium">
+                      {scene.textAnimation?.presetId ? getPresetDef(scene.textAnimation.presetId).name : scene.layout}
+                    </span>
                   </div>
 
                   {/* Two Dots from User's Screenshot •• */}

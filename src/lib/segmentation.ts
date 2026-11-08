@@ -21,11 +21,26 @@ export interface Scene {
   textColor?: string;
   lineHeight?: number;
   fontSize?: number;
+  fontFamily?: string;
   positionX?: number;
   positionY?: number;
   textAlign?: "left" | "center" | "right";
+  rotation?: number;
+  fontWeight?: number;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  letterSpacing?: number;
+  opacity?: number;
+  textBackgroundColor?: string;
+  textStroke?: string;
+  textShadow?: boolean;
+  verticalAlign?: "top" | "center" | "bottom";
+  animationDuration?: number;
+  animationSpeed?: number;
   background?: BackgroundConfig;
   nodes?: [string, string, string];
+  textAnimation?: import("@/remotion/textMotion/types").TextMotionConfig;
   audioUrl?: string;
   audioDurationSeconds?: number;
 }

@@ -58,10 +58,20 @@ export function KineticCast({
       <SceneBackground {...background} isDark={isDark} />
 
       {positionedScenes.map(({ scene, from }) => {
-        const SceneComponent = SCENE_COMPONENTS[scene.layout] ?? CenterImpact;
+        const SceneComponent = scene.textAnimation ? CenterImpact : (SCENE_COMPONENTS[scene.layout] ?? CenterImpact);
 
         return (
           <Sequence key={scene.id} from={from} durationInFrames={scene.durationInFrames}>
+            <AbsoluteFill style={{
+              transform: `rotate(${scene.rotation ?? 0}deg)`,
+              opacity: scene.opacity ?? 1,
+              fontWeight: scene.bold ? 700 : scene.fontWeight ?? 700,
+              fontStyle: scene.italic ? "italic" : "normal",
+              textDecoration: scene.underline ? "underline" : "none",
+              letterSpacing: `${scene.letterSpacing ?? 0}px`,
+              WebkitTextStroke: scene.textStroke ?? undefined,
+              textShadow: scene.textShadow ? "0 4px 12px rgba(0,0,0,.65)" : undefined,
+            }}>
             <SceneComponent
               text={scene.text}
               stickers={scene.stickers}
@@ -69,13 +79,16 @@ export function KineticCast({
               background={{ style: "none", imageDataUrl: null }}
               backgroundColor="transparent"
               textColor={scene.textColor}
+              fontFamily={scene.fontFamily}
               lineHeight={scene.lineHeight}
               fontSize={scene.fontSize}
               positionX={scene.positionX}
               positionY={scene.positionY}
               textAlign={scene.textAlign}
               nodes={scene.nodes}
+              textAnimation={scene.textAnimation}
             />
+            </AbsoluteFill>
             {scene.audioUrl && <Audio src={scene.audioUrl} />}
           </Sequence>
         );

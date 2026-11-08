@@ -16,7 +16,7 @@ export const LAYOUT_THEME: Record<SceneLayout, LayoutTheme> = {
   },
   "pan-slide": {
     label: "Pan & Slide",
-    chipClass: "bg-blue-500/20 border-blue-500/60 text-blue-300",
+    chipClass: "bg-cyan-500/20 border-cyan-500/60 text-cyan-300",
   },
   "breathe-float": {
     label: "Breathe",
