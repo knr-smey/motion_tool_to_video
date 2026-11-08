@@ -11,10 +11,13 @@ import { BreatheFloat } from "./scenes/BreatheFloat";
 import { Typewriter } from "./scenes/Typewriter";
 import { StaticClean } from "./scenes/StaticClean";
 import { DEFAULT_BACKGROUND, type BackgroundConfig } from "./backgrounds/types";
+import { SceneBackground } from "./backgrounds/SceneBackground";
+import { isColorDark } from "@/lib/colorUtils";
 
 export interface KineticCastProps extends Record<string, unknown> {
   scenes: Scene[];
   background?: BackgroundConfig;
+  backgroundColor?: string;
 }
 
 const SCENE_COMPONENTS = {
@@ -40,14 +43,22 @@ export function withStartFrames(scenes: Scene[]): Array<{ scene: Scene; from: nu
   return result;
 }
 
-export function KineticCast({ scenes, background = DEFAULT_BACKGROUND }: KineticCastProps) {
+export function KineticCast({
+  scenes,
+  background = DEFAULT_BACKGROUND,
+  backgroundColor = "#000000",
+}: KineticCastProps) {
   const positionedScenes = withStartFrames(scenes);
+  const effectiveBgColor = backgroundColor ?? "#000000";
+  const isDark = isColorDark(effectiveBgColor);
 
   return (
-    <AbsoluteFill style={{ backgroundColor: "#000000" }}>
+    <AbsoluteFill style={{ backgroundColor: effectiveBgColor }}>
+      {/* GLOBAL BACKGROUND: Covers the full video continuously without cutting/restarting per scene */}
+      <SceneBackground {...background} isDark={isDark} />
+
       {positionedScenes.map(({ scene, from }) => {
         const SceneComponent = SCENE_COMPONENTS[scene.layout] ?? CenterImpact;
-        const effectiveBackground = scene.background ?? background;
 
         return (
           <Sequence key={scene.id} from={from} durationInFrames={scene.durationInFrames}>
@@ -55,8 +66,8 @@ export function KineticCast({ scenes, background = DEFAULT_BACKGROUND }: Kinetic
               text={scene.text}
               stickers={scene.stickers}
               durationInFrames={scene.durationInFrames}
-              background={effectiveBackground}
-              backgroundColor={scene.backgroundColor}
+              background={{ style: "none", imageDataUrl: null }}
+              backgroundColor="transparent"
               textColor={scene.textColor}
               lineHeight={scene.lineHeight}
               fontSize={scene.fontSize}

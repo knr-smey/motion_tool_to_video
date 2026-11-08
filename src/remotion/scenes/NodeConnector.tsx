@@ -23,8 +23,8 @@ export function NodeConnector({
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const effectiveBg = backgroundColor ?? "#000000";
-  const isDark = isColorDark(effectiveBg);
+  const effectiveBg = backgroundColor === "transparent" ? "transparent" : (backgroundColor ?? "#000000");
+  const isDark = isColorDark(effectiveBg === "transparent" ? "#000000" : effectiveBg);
   const effectiveText = textColor ?? (isDark ? "#FFFFFF" : "#000000");
   const accentColor = "#F1591F";
 
@@ -58,7 +58,9 @@ export function NodeConnector({
 
   return (
     <AbsoluteFill style={{ backgroundColor: effectiveBg }}>
-      <SceneBackground {...background} isDark={isDark} />
+      {background?.style && background.style !== "none" && (
+        <SceneBackground {...background} isDark={isDark} />
+      )}
 
       {/* Floating Animated Sticker Badges */}
       {stickers.map((sticker, i) => (

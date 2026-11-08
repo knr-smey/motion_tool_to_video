@@ -30,6 +30,10 @@ export interface EditPanelProps {
   onApplyToAllScenes: (updates: Partial<Scene>) => void;
   onResetScene: (index: number) => void;
   onOpenRecordModal?: (index: number) => void;
+  globalBackground?: BackgroundConfig;
+  onUpdateGlobalBackground?: (bg: BackgroundConfig) => void;
+  globalBgColor?: string;
+  onUpdateGlobalBgColor?: (color: string) => void;
 }
 
 interface TextAnimationOption {
@@ -229,6 +233,10 @@ export function EditPanel({
   onApplyToAllScenes,
   onResetScene,
   onOpenRecordModal,
+  globalBackground,
+  onUpdateGlobalBackground,
+  globalBgColor,
+  onUpdateGlobalBgColor,
 }: EditPanelProps) {
   const [copiedSection, setCopiedSection] = useState<string | null>(null);
   const dragPadRef = useRef<HTMLDivElement>(null);
@@ -239,19 +247,33 @@ export function EditPanel({
 
   // Active scene values with graceful defaults
   const activeLayout = scene?.layout ?? "center-impact";
-  const activeBgColor = scene?.backgroundColor ?? "#000000";
+  const activeBgColor = globalBgColor ?? scene?.backgroundColor ?? "#000000";
   const activeTextColor = scene?.textColor ?? "#FFFFFF";
   const activeLineHeight = scene?.lineHeight ?? 1.35;
   const activeFontSize = scene?.fontSize ?? 76;
   const activePosX = scene?.positionX ?? 0;
   const activePosY = scene?.positionY ?? 0;
   const activeAlign = scene?.textAlign ?? "center";
-  const activeBackground = scene?.background ?? { style: "none", imageDataUrl: null };
+  const activeBackground = globalBackground ?? scene?.background ?? { style: "none", imageDataUrl: null };
 
   const handleApplyPartialToAll = (sectionKey: string, updates: Partial<Scene>) => {
     onApplyToAllScenes(updates);
     setCopiedSection(sectionKey);
     setTimeout(() => setCopiedSection(null), 2000);
+  };
+
+  const handleSelectBackgroundEffect = (style: BackgroundStyle) => {
+    const updatedBg: BackgroundConfig = {
+      style,
+      imageDataUrl: activeBackground.imageDataUrl,
+    };
+    onUpdateGlobalBackground?.(updatedBg);
+    onApplyToAllScenes({ background: updatedBg });
+  };
+
+  const handleSelectBgColor = (color: string) => {
+    onUpdateGlobalBgColor?.(color);
+    onApplyToAllScenes({ backgroundColor: color });
   };
 
   // 2D Drag Pad Handler
@@ -298,7 +320,8 @@ export function EditPanel({
     if (!file || !file.type.startsWith("image/")) return;
     const dataUrl = await readFileAsDataUrl(file);
     const updatedBg: BackgroundConfig = { style: "image", imageDataUrl: dataUrl };
-    onUpdateScene(activeSceneIndex, { background: updatedBg });
+    onUpdateGlobalBackground?.(updatedBg);
+    onApplyToAllScenes({ background: updatedBg });
   };
 
   if (!hasScenes) {
@@ -520,29 +543,28 @@ export function EditPanel({
 
       {/* 3. Background & Color Settings */}
       <div className="flex flex-col gap-3.5 rounded-xl border border-border bg-surface p-4">
-        <div className="flex items-center gap-2">
-          <Palette size={16} className="text-accent" />
-          <h3 className="text-sm font-semibold">Background & Colors</h3>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Palette size={16} className="text-accent" />
+            <h3 className="text-sm font-semibold">Background & Colors</h3>
+          </div>
+          <span className="text-[10px] text-accent font-medium bg-accent/15 px-2 py-0.5 rounded-full font-mono">
+            Full Video BG
+          </span>
         </div>
 
         {/* Background Style Type Tabs */}
         <div>
           <label className="text-xs font-medium text-muted block mb-1.5">
-            Background Effect
+            Background Effect (Full Video)
           </label>
           <div className="grid grid-cols-4 gap-1 rounded-lg border border-border bg-surface-raised p-1">
             {BG_STYLE_OPTIONS.map((opt) => (
               <button
                 key={opt.id}
                 type="button"
-                onClick={() => {
-                  const updatedBg: BackgroundConfig = {
-                    style: opt.id,
-                    imageDataUrl: activeBackground.imageDataUrl,
-                  };
-                  onUpdateScene(activeSceneIndex, { background: updatedBg });
-                }}
-                className={`rounded py-1 text-xs font-medium transition ${
+                onClick={() => handleSelectBackgroundEffect(opt.id)}
+                className={`rounded py-1 text-xs font-medium transition cursor-pointer ${
                   activeBackground.style === opt.id
                     ? "bg-accent text-accent-foreground font-semibold shadow-sm"
                     : "text-muted hover:text-foreground"
@@ -562,16 +584,16 @@ export function EditPanel({
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={activeBackground.imageDataUrl}
-                  alt="Custom scene bg"
+                  alt="Custom video bg"
                   className="h-20 w-full object-cover"
                 />
                 <button
                   type="button"
-                  onClick={() =>
-                    onUpdateScene(activeSceneIndex, {
-                      background: { style: "none", imageDataUrl: null },
-                    })
-                  }
+                  onClick={() => {
+                    const updatedBg = { style: "none" as const, imageDataUrl: null };
+                    onUpdateGlobalBackground?.(updatedBg);
+                    onApplyToAllScenes({ background: updatedBg });
+                  }}
                   className="absolute right-1.5 top-1.5 rounded-full bg-black/80 p-1 text-white hover:bg-black"
                 >
                   <X size={12} />
@@ -602,7 +624,7 @@ export function EditPanel({
         {/* Background Color Picker & Swatches */}
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="text-xs font-medium text-muted">Background Color</label>
+            <label className="text-xs font-medium text-muted">Background Color (Full Video)</label>
             <div className="flex items-center gap-1.5">
               <span className="text-[11px] font-mono text-muted uppercase">
                 {activeBgColor}
@@ -610,9 +632,7 @@ export function EditPanel({
               <input
                 type="color"
                 value={activeBgColor}
-                onChange={(e) =>
-                  onUpdateScene(activeSceneIndex, { backgroundColor: e.target.value })
-                }
+                onChange={(e) => handleSelectBgColor(e.target.value)}
                 className="h-5 w-6 cursor-pointer rounded border border-border bg-transparent"
                 title="Choose custom background color"
               />
@@ -624,12 +644,10 @@ export function EditPanel({
               <button
                 key={swatch.color}
                 type="button"
-                onClick={() =>
-                  onUpdateScene(activeSceneIndex, { backgroundColor: swatch.color })
-                }
+                onClick={() => handleSelectBgColor(swatch.color)}
                 title={swatch.label}
                 style={{ backgroundColor: swatch.color }}
-                className={`h-7 rounded-md border flex items-center justify-center transition-transform hover:scale-105 ${
+                className={`h-7 rounded-md border flex items-center justify-center transition-transform hover:scale-105 cursor-pointer ${
                   activeBgColor.toLowerCase() === swatch.color.toLowerCase()
                     ? "border-accent ring-2 ring-accent"
                     : "border-border/80"
@@ -676,7 +694,7 @@ export function EditPanel({
                 }
                 title={swatch.label}
                 style={{ backgroundColor: swatch.color }}
-                className={`h-7 rounded-md border flex items-center justify-center transition-transform hover:scale-105 ${
+                className={`h-7 rounded-md border flex items-center justify-center transition-transform hover:scale-105 cursor-pointer ${
                   activeTextColor.toLowerCase() === swatch.color.toLowerCase()
                     ? "border-accent ring-2 ring-accent"
                     : "border-border/80"
@@ -693,29 +711,27 @@ export function EditPanel({
           </div>
         </div>
 
-        {/* Apply Colors & Background to All Scenes */}
+        {/* Apply Text Color to All Scenes */}
         <div className="pt-2 border-t border-border/60">
           <button
             type="button"
             onClick={() =>
-              handleApplyPartialToAll("colors", {
-                backgroundColor: activeBgColor,
+              handleApplyPartialToAll("textColor", {
                 textColor: activeTextColor,
-                background: activeBackground,
               })
             }
             className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-border bg-surface-raised py-1.5 px-3 text-[11px] font-semibold text-foreground transition hover:border-accent hover:text-accent cursor-pointer"
-            title="Apply these colors & background style to all scenes"
+            title="Apply text color to all scenes"
           >
-            {copiedSection === "colors" ? (
+            {copiedSection === "textColor" ? (
               <>
                 <Check size={12} className="text-emerald-400" />
-                <span className="text-emerald-400">Colors Applied to All Scenes!</span>
+                <span className="text-emerald-400">Text Color Applied to All Scenes!</span>
               </>
             ) : (
               <>
                 <CopyCheck size={12} />
-                <span>Apply Colors & Background to All Scenes</span>
+                <span>Apply Text Color to All Scenes</span>
               </>
             )}
           </button>

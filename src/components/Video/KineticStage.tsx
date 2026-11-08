@@ -2,7 +2,6 @@
 
 import { useCallback, useRef, type RefObject } from "react";
 import { Player, type PlayerRef } from "@remotion/player";
-import { Move } from "lucide-react";
 import { KineticCast } from "@/remotion/Composition";
 import type { Scene } from "@/lib/segmentation";
 import type { BackgroundConfig } from "@/remotion/backgrounds/types";
@@ -19,6 +18,7 @@ interface KineticStageProps {
   totalDurationInFrames: number;
   aspectRatio: AspectRatio;
   background: BackgroundConfig;
+  backgroundColor?: string;
   playerRef: RefObject<PlayerRef | null>;
   activeSceneIndex?: number;
   onUpdatePosition?: (x: number, y: number) => void;
@@ -30,6 +30,7 @@ export function KineticStage({
   totalDurationInFrames,
   aspectRatio,
   background,
+  backgroundColor = "#000000",
   playerRef,
   activeSceneIndex = 0,
   onUpdatePosition,
@@ -65,8 +66,8 @@ export function KineticStage({
         const newY = Math.round(startPosY + deltaClientY / scaleY);
 
         // Clamp to sensible range
-        const clampedX = Math.max(-400, Math.min(400, newX));
-        const clampedY = Math.max(-300, Math.min(300, newY));
+        const clampedX = Math.max(-500, Math.min(500, newX));
+        const clampedY = Math.max(-400, Math.min(400, newY));
 
         onUpdatePosition(clampedX, clampedY);
       };
@@ -83,15 +84,13 @@ export function KineticStage({
   );
 
   // Position of handle relative to container center
-  // Center is at 50%, 50%
-  // Offset in percent: (posX / compWidth) * 100%
   const handlePercentX = 50 + (posX / compWidth) * 100;
   const handlePercentY = 50 + (posY / compHeight) * 100;
 
   return (
     <div
       ref={containerRef}
-      className="relative max-h-full max-w-full rounded-lg overflow-hidden border-2 border-accent/50 bg-black select-none shadow-lg flex items-center justify-center"
+      className="relative max-h-full max-w-full rounded-xl overflow-hidden border border-white/10 bg-black select-none shadow-2xl flex items-center justify-center group"
       style={{
         aspectRatio: `${compWidth} / ${compHeight}`,
         height: "100%",
@@ -101,7 +100,7 @@ export function KineticStage({
       <Player
         ref={playerRef}
         component={KineticCast}
-        inputProps={{ scenes, background }}
+        inputProps={{ scenes, background, backgroundColor }}
         durationInFrames={Math.max(1, totalDurationInFrames)}
         fps={30}
         compositionWidth={compWidth}
@@ -110,7 +109,7 @@ export function KineticStage({
         controls={false}
       />
 
-      {/* On-Canvas Draggable Guide Handle */}
+      {/* On-Canvas Bounding Box with 8 Handles (Reference UI style) */}
       {showGuide && activeScene && (
         <div
           style={{
@@ -119,19 +118,39 @@ export function KineticStage({
             transform: "translate(-50%, -50%)",
           }}
           onPointerDown={handlePointerDownOnCanvas}
-          className="absolute z-20 cursor-grab active:cursor-grabbing flex flex-col items-center justify-center pointer-events-auto touch-none"
-          title="Drag to position scene text"
+          className="absolute z-20 cursor-grab active:cursor-grabbing pointer-events-auto touch-none"
+          title="Drag to reposition text on canvas"
         >
-          {/* Draggable Badge */}
-          <div className="flex items-center gap-1.5 rounded-full bg-accent/90 backdrop-blur-md px-3 py-1 text-xs font-semibold text-accent-foreground shadow-xl ring-2 ring-white/20 transition-transform hover:scale-105 active:scale-95">
-            <Move size={12} />
-            <span className="font-mono text-[11px] tabular-nums">
-              Drag ({posX >= 0 ? `+${posX}` : posX}, {posY >= 0 ? `+${posY}` : posY})
-            </span>
-          </div>
+          {/* Bounding Box Frame */}
+          <div className="relative min-w-[200px] max-w-[420px] px-4 py-2.5 rounded border border-white/90 bg-white/[0.04] backdrop-blur-[1px] shadow-sm">
+            {/* 8 Resize/Move Circular Dots */}
+            {/* Top-Left */}
+            <span className="absolute -top-1 -left-1 h-2 w-2 rounded-full bg-white ring-1 ring-black/40 shadow-sm" />
+            {/* Top-Center */}
+            <span className="absolute -top-1 left-1/2 -translate-x-1/2 h-2 w-2 rounded-full bg-white ring-1 ring-black/40 shadow-sm" />
+            {/* Top-Right */}
+            <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-white ring-1 ring-black/40 shadow-sm" />
 
-          {/* Target Reticle Indicator */}
-          <div className="mt-1 h-3 w-3 rounded-full border-2 border-accent/80 bg-accent/30 animate-pulse pointer-events-none" />
+            {/* Middle-Left */}
+            <span className="absolute top-1/2 -left-1 -translate-y-1/2 h-2 w-2 rounded-full bg-white ring-1 ring-black/40 shadow-sm" />
+            {/* Middle-Right */}
+            <span className="absolute top-1/2 -right-1 -translate-y-1/2 h-2 w-2 rounded-full bg-white ring-1 ring-black/40 shadow-sm" />
+
+            {/* Bottom-Left */}
+            <span className="absolute -bottom-1 -left-1 h-2 w-2 rounded-full bg-white ring-1 ring-black/40 shadow-sm" />
+            {/* Bottom-Center */}
+            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-2 w-2 rounded-full bg-white ring-1 ring-black/40 shadow-sm" />
+            {/* Bottom-Right */}
+            <span className="absolute -bottom-1 -right-1 h-2 w-2 rounded-full bg-white ring-1 ring-black/40 shadow-sm" />
+
+            {/* Drag Handle Label */}
+            <div className="flex items-center justify-between text-[10px] font-medium text-white/90 truncate gap-2">
+              <span className="truncate">{activeScene.text || "Text Box"}</span>
+              <span className="text-[9px] font-mono text-white/60 tabular-nums shrink-0">
+                {posX >= 0 ? `+${posX}` : posX}, {posY >= 0 ? `+${posY}` : posY}
+              </span>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -5,31 +5,27 @@ import type { PlayerRef } from "@remotion/player";
 import {
   Pause,
   Play,
-  RectangleHorizontal,
-  RectangleVertical,
-  RotateCcw,
+  SkipBack,
+  SkipForward,
+  Maximize2,
   Move,
 } from "lucide-react";
 import { KineticStage, type AspectRatio } from "./KineticStage";
 import type { Scene } from "@/lib/segmentation";
 import type { BackgroundConfig } from "@/remotion/backgrounds/types";
+import { withStartFrames } from "@/remotion/Composition";
 
 interface PlayerDeckProps {
   scenes: Scene[];
   totalDurationInFrames: number;
   fps: number;
   background: BackgroundConfig;
+  backgroundColor?: string;
   playerRef: RefObject<PlayerRef | null>;
   activeSceneIndex?: number;
   onUpdatePosition?: (x: number, y: number) => void;
-}
-
-function formatTime(frame: number, fps: number): string {
-  const totalSeconds = Math.floor(frame / fps);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  const frameRemainder = frame % fps;
-  return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}:${frameRemainder.toString().padStart(2, "0")}`;
+  aspectRatio?: AspectRatio;
+  onSelectScene?: (index: number) => void;
 }
 
 export function PlayerDeck({
@@ -37,13 +33,14 @@ export function PlayerDeck({
   totalDurationInFrames,
   fps,
   background,
+  backgroundColor = "#000000",
   playerRef,
   activeSceneIndex = 0,
   onUpdatePosition,
+  aspectRatio = "16:9",
+  onSelectScene,
 }: PlayerDeckProps) {
-  const [aspectRatio, setAspectRatio] = useState<AspectRatio>("16:9");
   const [isPlaying, setIsPlaying] = useState(false);
-  const [frame, setFrame] = useState(0);
   const [showGuide, setShowGuide] = useState(false);
 
   useEffect(() => {
@@ -52,16 +49,13 @@ export function PlayerDeck({
 
     const onPlay = () => setIsPlaying(true);
     const onPause = () => setIsPlaying(false);
-    const onFrameUpdate = () => setFrame(player.getCurrentFrame());
 
     player.addEventListener("play", onPlay);
     player.addEventListener("pause", onPause);
-    player.addEventListener("frameupdate", onFrameUpdate);
 
     return () => {
       player.removeEventListener("play", onPlay);
       player.removeEventListener("pause", onPause);
-      player.removeEventListener("frameupdate", onFrameUpdate);
     };
   }, [playerRef]);
 
@@ -72,25 +66,51 @@ export function PlayerDeck({
     else player.play();
   }, [playerRef]);
 
-  const restart = useCallback(() => {
-    playerRef.current?.seekTo(0);
-  }, [playerRef]);
+  const skipToPrevScene = useCallback(() => {
+    if (scenes.length === 0) return;
+    const prevIndex = Math.max(0, activeSceneIndex - 1);
+    const positioned = withStartFrames(scenes);
+    const target = positioned[prevIndex];
+    if (target && playerRef.current) {
+      playerRef.current.seekTo(target.from);
+      onSelectScene?.(prevIndex);
+    }
+  }, [activeSceneIndex, onSelectScene, playerRef, scenes]);
 
-  const scrub = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      playerRef.current?.seekTo(Number(event.target.value));
-    },
-    [playerRef]
-  );
+  const skipToNextScene = useCallback(() => {
+    if (scenes.length === 0) return;
+    const nextIndex = Math.min(scenes.length - 1, activeSceneIndex + 1);
+    const positioned = withStartFrames(scenes);
+    const target = positioned[nextIndex];
+    if (target && playerRef.current) {
+      playerRef.current.seekTo(target.from);
+      onSelectScene?.(nextIndex);
+    }
+  }, [activeSceneIndex, onSelectScene, playerRef, scenes]);
+
+  const toggleFullscreen = useCallback(() => {
+    const stage = document.getElementById("canvas-stage-wrapper");
+    if (!stage) return;
+    if (!document.fullscreenElement) {
+      stage.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  }, []);
 
   return (
-    <div className="flex w-full max-w-4xl flex-col gap-2 rounded-xl border border-border bg-surface p-2.5 shadow-sm h-full min-h-0 justify-between">
-      <div className="flex-1 min-h-[200px] w-full flex items-center justify-center overflow-hidden">
+    <div className="flex w-full h-full flex-col items-center justify-between min-h-0 py-2">
+      {/* Video Canvas Stage */}
+      <div
+        id="canvas-stage-wrapper"
+        className="flex-1 w-full min-h-0 flex items-center justify-center p-2 overflow-hidden"
+      >
         <KineticStage
           scenes={scenes}
           totalDurationInFrames={totalDurationInFrames}
           aspectRatio={aspectRatio}
           background={background}
+          backgroundColor={backgroundColor}
           playerRef={playerRef}
           activeSceneIndex={activeSceneIndex}
           onUpdatePosition={onUpdatePosition}
@@ -98,90 +118,69 @@ export function PlayerDeck({
         />
       </div>
 
-      {/* Scrubber & Time code */}
-      <div className="flex items-center gap-3 text-xs text-muted shrink-0">
-        <span className="tabular-nums font-mono">{formatTime(frame, fps)}</span>
-        <input
-          type="range"
-          min={0}
-          max={Math.max(1, totalDurationInFrames - 1)}
-          value={frame}
-          onChange={scrub}
-          className="h-1 flex-1 accent-accent cursor-pointer"
-        />
-        <span className="tabular-nums font-mono">
-          {formatTime(totalDurationInFrames, fps)}
-        </span>
-      </div>
+      {/* Centered Minimal Playback Controls (Matching Reference Screenshot) */}
+      <div className="w-full max-w-4xl px-4 flex items-center justify-between shrink-0 h-10 select-none">
+        {/* Left: Drag Handle Indicator (Off by default) */}
+        <button
+          type="button"
+          onClick={() => setShowGuide((prev) => !prev)}
+          className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium transition cursor-pointer ${
+            showGuide
+              ? "bg-[#f1591f]/15 text-[#f1591f] border border-[#f1591f]/40"
+              : "text-muted hover:text-foreground hover:bg-white/5 border border-transparent"
+          }`}
+          title="Toggle on-canvas bounding box handles"
+        >
+          <Move size={12} />
+          <span>Transform Box {showGuide ? "On" : "Off"}</span>
+        </button>
 
-      {/* Control bar */}
-      <div className="flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-2">
+        {/* Center: |<<  ▶/❚❚  >>| */}
+        <div className="flex items-center gap-3">
+          {/* Skip Previous Scene */}
           <button
             type="button"
-            onClick={restart}
-            className="rounded-full p-2 text-foreground transition-colors hover:bg-surface-raised"
-            aria-label="Restart"
-            title="Restart to beginning"
+            onClick={skipToPrevScene}
+            className="flex h-8 w-8 items-center justify-center rounded-full text-foreground/70 hover:text-white hover:bg-white/10 transition cursor-pointer"
+            title="Previous scene"
           >
-            <RotateCcw size={18} />
+            <SkipBack size={15} />
           </button>
 
+          {/* Play / Pause Button */}
           <button
             type="button"
             onClick={togglePlay}
-            className="rounded-full bg-accent p-2 text-accent-foreground transition-opacity hover:opacity-90 shadow"
-            aria-label={isPlaying ? "Pause" : "Play"}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-black hover:bg-white/90 transition shadow-lg cursor-pointer"
             title={isPlaying ? "Pause" : "Play"}
           >
-            {isPlaying ? <Pause size={18} /> : <Play size={18} />}
+            {isPlaying ? (
+              <Pause size={17} className="fill-black" />
+            ) : (
+              <Play size={17} className="fill-black" />
+            )}
           </button>
 
-          {/* Canvas Drag Handle Toggle */}
+          {/* Skip Next Scene */}
           <button
             type="button"
-            onClick={() => setShowGuide(!showGuide)}
-            className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition ${
-              showGuide
-                ? "bg-accent/15 text-accent border border-accent/40"
-                : "text-muted hover:text-foreground hover:bg-surface-raised border border-border"
-            }`}
-            title="Toggle on-canvas drag handle"
+            onClick={skipToNextScene}
+            className="flex h-8 w-8 items-center justify-center rounded-full text-foreground/70 hover:text-white hover:bg-white/10 transition cursor-pointer"
+            title="Next scene"
           >
-            <Move size={13} />
-            <span>Drag Handle {showGuide ? "On" : "Off"}</span>
+            <SkipForward size={15} />
           </button>
         </div>
 
-        {/* Aspect Ratio Toggles */}
-        <div className="flex overflow-hidden rounded-full border border-border">
-          <button
-            type="button"
-            onClick={() => setAspectRatio("16:9")}
-            className={`p-2 transition-colors ${
-              aspectRatio === "16:9"
-                ? "bg-accent text-accent-foreground"
-                : "text-muted hover:bg-surface-raised"
-            }`}
-            aria-label="16:9 landscape"
-            title="Landscape (16:9)"
-          >
-            <RectangleHorizontal size={18} />
-          </button>
-          <button
-            type="button"
-            onClick={() => setAspectRatio("9:16")}
-            className={`p-2 transition-colors ${
-              aspectRatio === "9:16"
-                ? "bg-accent text-accent-foreground"
-                : "text-muted hover:bg-surface-raised"
-            }`}
-            aria-label="9:16 portrait"
-            title="Portrait (9:16)"
-          >
-            <RectangleVertical size={18} />
-          </button>
-        </div>
+        {/* Right: Fullscreen Toggle */}
+        <button
+          type="button"
+          onClick={toggleFullscreen}
+          className="flex h-8 w-8 items-center justify-center rounded-full text-foreground/60 hover:text-white hover:bg-white/10 transition cursor-pointer"
+          title="Toggle Fullscreen"
+        >
+          <Maximize2 size={15} />
+        </button>
       </div>
     </div>
   );

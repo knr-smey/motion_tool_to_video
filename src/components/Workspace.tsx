@@ -3,15 +3,17 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { PlayerRef } from "@remotion/player";
 import { Topbar } from "@/components/Topbar";
-import { ScriptPanel } from "@/components/Editor/ScriptPanel";
-import { EditPanel } from "@/components/Editor/EditPanel";
+import { LeftActivityDock, type NavTab } from "@/components/Editor/LeftActivityDock";
+import { InspectorDrawer } from "@/components/Editor/InspectorDrawer";
 import { ScenePlaylist } from "@/components/Editor/ScenePlaylist";
 import { PlayerDeck } from "@/components/Video/PlayerDeck";
+import type { AspectRatio } from "@/components/Video/KineticStage";
 import { buildScenes, type Scene } from "@/lib/segmentation";
 import { getTotalDurationInFrames, withStartFrames } from "@/remotion/Composition";
 import { DEFAULT_PRESET_ID, PRESETS } from "@/lib/presets";
 import { DEFAULT_BACKGROUND, type BackgroundConfig } from "@/remotion/backgrounds/types";
 import { VoiceoverModal } from "@/components/Audio/VoiceoverModal";
+import { AiGeneratorModal, type GeneratedSceneData } from "@/components/Editor/AiGeneratorModal";
 
 const FPS = 30;
 const defaultScript = PRESETS.find((preset) => preset.id === DEFAULT_PRESET_ID)!.script;
@@ -20,9 +22,22 @@ export function Workspace() {
   const [script, setScript] = useState(defaultScript);
   const [sceneDuration, setSceneDuration] = useState(1.8);
   const [background, setBackground] = useState<BackgroundConfig>(DEFAULT_BACKGROUND);
+  const [backgroundColor, setBackgroundColor] = useState<string>("#000000");
+  const [aspectRatio, setAspectRatio] = useState<AspectRatio>("16:9");
   const [activeSceneIndex, setActiveSceneIndex] = useState(0);
   const [sceneOverrides, setSceneOverrides] = useState<Record<number, Partial<Scene>>>({});
+  
+  // Navigation & Drawer
+  const [activeTab, setActiveTab] = useState<NavTab>("text");
+  const [isDrawerOpen, setIsDrawerOpen] = useState(true);
+
+  // Modals
   const [recordModalIndex, setRecordModalIndex] = useState<number | null>(null);
+  const [isAiGeneratorOpen, setIsAiGeneratorOpen] = useState(false);
+
+  // Undo / Redo history
+  const [history, setHistory] = useState<Record<number, Partial<Scene>>[]>([]);
+  const [redoStack, setRedoStack] = useState<Record<number, Partial<Scene>>[]>([]);
 
   const playerRef = useRef<PlayerRef>(null);
 
@@ -42,10 +57,6 @@ export function Workspace() {
   }, [baseScenes, sceneOverrides]);
 
   const totalDurationInFrames = useMemo(() => getTotalDurationInFrames(scenes), [scenes]);
-  const wordCount = useMemo(
-    () => scenes.reduce((total, scene) => total + scene.wordCount, 0),
-    [scenes]
-  );
 
   // Safe active scene index clamping
   const safeActiveIndex = Math.min(
@@ -66,13 +77,17 @@ export function Workspace() {
   );
 
   const handleUpdateScene = useCallback((index: number, updates: Partial<Scene>) => {
-    setSceneOverrides((prev) => ({
-      ...prev,
-      [index]: {
-        ...prev[index],
-        ...updates,
-      },
-    }));
+    setSceneOverrides((prev) => {
+      setHistory((h) => [...h.slice(-15), prev]);
+      setRedoStack([]);
+      return {
+        ...prev,
+        [index]: {
+          ...prev[index],
+          ...updates,
+        },
+      };
+    });
   }, []);
 
   const handleUpdatePosition = useCallback(
@@ -85,6 +100,8 @@ export function Workspace() {
   const handleApplyToAllScenes = useCallback(
     (updates: Partial<Scene>) => {
       setSceneOverrides((prev) => {
+        setHistory((h) => [...h.slice(-15), prev]);
+        setRedoStack([]);
         const newOverrides: Record<number, Partial<Scene>> = {};
         baseScenes.forEach((_, idx) => {
           newOverrides[idx] = {
@@ -100,14 +117,84 @@ export function Workspace() {
 
   const handleResetScene = useCallback((index: number) => {
     setSceneOverrides((prev) => {
+      setHistory((h) => [...h.slice(-15), prev]);
+      setRedoStack([]);
       const copy = { ...prev };
       delete copy[index];
       return copy;
     });
   }, []);
 
+  // Duplicate active scene
+  const handleDuplicateScene = useCallback(
+    (index: number) => {
+      const lines = script.split("\n").filter((l) => l.trim().length > 0);
+      if (index >= 0 && index < lines.length) {
+        const lineToDuplicate = lines[index];
+        const newLines = [...lines.slice(0, index + 1), lineToDuplicate, ...lines.slice(index + 1)];
+        setScript(newLines.join("\n"));
+        setActiveSceneIndex(index + 1);
+      }
+    },
+    [script]
+  );
+
+  // Delete active scene
+  const handleDeleteScene = useCallback(
+    (index: number) => {
+      const lines = script.split("\n").filter((l) => l.trim().length > 0);
+      if (lines.length <= 1) return;
+      const newLines = lines.filter((_, idx) => idx !== index);
+      setScript(newLines.join("\n"));
+      setActiveSceneIndex(Math.max(0, index - 1));
+    },
+    [script]
+  );
+
+  // Split active scene in half
+  const handleSplitScene = useCallback(
+    (index: number) => {
+      const lines = script.split("\n").filter((l) => l.trim().length > 0);
+      if (index >= 0 && index < lines.length) {
+        const targetLine = lines[index];
+        const words = targetLine.trim().split(/\s+/);
+        if (words.length >= 2) {
+          const mid = Math.ceil(words.length / 2);
+          const part1 = words.slice(0, mid).join(" ");
+          const part2 = words.slice(mid).join(" ");
+          const newLines = [
+            ...lines.slice(0, index),
+            part1,
+            part2,
+            ...lines.slice(index + 1),
+          ];
+          setScript(newLines.join("\n"));
+          setActiveSceneIndex(index + 1);
+        }
+      }
+    },
+    [script]
+  );
+
+  // Undo / Redo
+  const handleUndo = useCallback(() => {
+    if (history.length === 0) return;
+    const prev = history[history.length - 1];
+    setHistory((h) => h.slice(0, -1));
+    setRedoStack((r) => [...r, sceneOverrides]);
+    setSceneOverrides(prev);
+  }, [history, sceneOverrides]);
+
+  const handleRedo = useCallback(() => {
+    if (redoStack.length === 0) return;
+    const next = redoStack[redoStack.length - 1];
+    setRedoStack((r) => r.slice(0, -1));
+    setHistory((h) => [...h, sceneOverrides]);
+    setSceneOverrides(next);
+  }, [redoStack, sceneOverrides]);
+
   const handleApplyAiScenes = useCallback(
-    (newScript: string, generatedScenes: import("./Editor/AiGeneratorModal").GeneratedSceneData[]) => {
+    (newScript: string, generatedScenes: GeneratedSceneData[]) => {
       setScript(newScript);
       const overrides: Record<number, Partial<Scene>> = {};
       generatedScenes.forEach((s, idx) => {
@@ -132,18 +219,21 @@ export function Workspace() {
     setRecordModalIndex(index);
   }, []);
 
-  const handleSaveAudio = useCallback((index: number, audioDataUrl: string, durationSeconds: number) => {
-    setSceneOverrides((prev) => ({
-      ...prev,
-      [index]: {
-        ...prev[index],
-        audioUrl: audioDataUrl,
-        audioDurationSeconds: durationSeconds,
-        durationSeconds,
-        durationInFrames: Math.round(durationSeconds * FPS),
-      },
-    }));
-  }, []);
+  const handleSaveAudio = useCallback(
+    (index: number, audioDataUrl: string, durationSeconds: number) => {
+      setSceneOverrides((prev) => ({
+        ...prev,
+        [index]: {
+          ...prev[index],
+          audioUrl: audioDataUrl,
+          audioDurationSeconds: durationSeconds,
+          durationSeconds,
+          durationInFrames: Math.round(durationSeconds * FPS),
+        },
+      }));
+    },
+    []
+  );
 
   const handleRemoveAudio = useCallback((index: number) => {
     setSceneOverrides((prev) => {
@@ -154,63 +244,94 @@ export function Workspace() {
     });
   }, []);
 
+  const handleUpdateSceneDuration = useCallback(
+    (index: number, newDurationSeconds: number) => {
+      const clamped = Math.max(0.5, Math.min(30, Math.round(newDurationSeconds * 10) / 10));
+      handleUpdateScene(index, {
+        durationSeconds: clamped,
+        durationInFrames: Math.round(clamped * FPS),
+      });
+    },
+    [handleUpdateScene]
+  );
+
   return (
-    <div className="flex h-screen flex-col bg-background text-foreground overflow-hidden">
-      <Topbar />
+    <div className="flex h-screen flex-col bg-[#0e0e11] text-foreground overflow-hidden font-sans">
+      {/* 1. TOP HEADER (Reference image top bar) */}
+      <Topbar
+        aspectRatio={aspectRatio}
+        onToggleAspectRatio={setAspectRatio}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        canUndo={history.length > 0}
+        canRedo={redoStack.length > 0}
+      />
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* LEFT PANEL: Script Panel */}
-        <aside className="w-[360px] xl:w-[400px] shrink-0 overflow-y-auto border-r border-border bg-surface/30">
-          <ScriptPanel
-            script={script}
-            wordCount={wordCount}
-            duration={sceneDuration}
-            scenes={scenes}
-            activeSceneIndex={safeActiveIndex}
-            onScriptChange={setScript}
-            onDurationChange={setSceneDuration}
-            onSelectScene={handleSelectScene}
-            onApplyAiScenes={handleApplyAiScenes}
-          />
-        </aside>
+      {/* 2. MAIN WORKSPACE BODY */}
+      <div className="flex flex-1 overflow-hidden relative">
+        {/* Leftmost Activity Dock (~64px icon bar) */}
+        <LeftActivityDock
+          activeTab={activeTab}
+          onSelectTab={setActiveTab}
+          onOpenAiGenerator={() => setIsAiGeneratorOpen(true)}
+          isDrawerOpen={isDrawerOpen}
+          onToggleDrawer={() => setIsDrawerOpen(!isDrawerOpen)}
+        />
 
-        {/* CENTER PANEL: Stage Deck & Timeline - Fits 100% vertically without scrolling */}
-        <main className="flex flex-1 flex-col h-full min-h-0 overflow-hidden p-2.5 xl:p-3.5 gap-2.5 justify-between items-center bg-background/60">
-          <div className="flex-1 min-h-0 w-full flex flex-col items-center justify-center overflow-hidden">
+        {/* Collapsible Secondary Inspector Drawer (~340px) */}
+        <InspectorDrawer
+          activeTab={activeTab}
+          isOpen={isDrawerOpen}
+          onClose={() => setIsDrawerOpen(false)}
+          scenes={scenes}
+          activeSceneIndex={safeActiveIndex}
+          onSelectScene={handleSelectScene}
+          onUpdateScene={handleUpdateScene}
+          onApplyToAllScenes={handleApplyToAllScenes}
+          onResetScene={handleResetScene}
+          script={script}
+          onScriptChange={setScript}
+          sceneDuration={sceneDuration}
+          onDurationChange={setSceneDuration}
+          onOpenAiGenerator={() => setIsAiGeneratorOpen(true)}
+          globalBackground={background}
+          onUpdateGlobalBackground={setBackground}
+          globalBgColor={backgroundColor}
+          onUpdateGlobalBgColor={setBackgroundColor}
+          onOpenRecordModal={handleOpenRecordModal}
+        />
+
+        {/* Studio Center Area (Preview Stage + Bottom Full-Width Multi-Track Timeline) */}
+        <main className="flex-1 flex flex-col h-full min-h-0 overflow-hidden bg-[#121216]/50">
+          {/* Top Preview Stage Area */}
+          <div className="flex-1 min-h-0 w-full flex items-center justify-center overflow-hidden">
             <PlayerDeck
               scenes={scenes}
               totalDurationInFrames={totalDurationInFrames}
               fps={FPS}
               background={background}
+              backgroundColor={backgroundColor}
               playerRef={playerRef}
               activeSceneIndex={safeActiveIndex}
               onUpdatePosition={handleUpdatePosition}
-            />
-          </div>
-
-          <div className="shrink-0 w-full flex justify-center">
-            <ScenePlaylist
-              scenes={scenes}
-              playerRef={playerRef}
-              activeSceneIndex={safeActiveIndex}
+              aspectRatio={aspectRatio}
               onSelectScene={handleSelectScene}
-              onOpenRecordModal={handleOpenRecordModal}
             />
           </div>
-        </main>
 
-        {/* RIGHT PANEL: Edit Panel */}
-        <aside className="w-[380px] xl:w-[420px] shrink-0 overflow-y-auto border-l border-border bg-surface/30">
-          <EditPanel
+          {/* Bottom Pro Multi-Track Timeline Dock (Edge-to-Edge) */}
+          <ScenePlaylist
             scenes={scenes}
+            playerRef={playerRef}
             activeSceneIndex={safeActiveIndex}
             onSelectScene={handleSelectScene}
-            onUpdateScene={handleUpdateScene}
-            onApplyToAllScenes={handleApplyToAllScenes}
-            onResetScene={handleResetScene}
             onOpenRecordModal={handleOpenRecordModal}
+            onDuplicateScene={handleDuplicateScene}
+            onDeleteScene={handleDeleteScene}
+            onSplitScene={handleSplitScene}
+            onUpdateSceneDuration={handleUpdateSceneDuration}
           />
-        </aside>
+        </main>
       </div>
 
       {/* Voiceover Recording Modal */}
@@ -221,6 +342,13 @@ export function Workspace() {
         onClose={() => setRecordModalIndex(null)}
         onSaveAudio={handleSaveAudio}
         onRemoveAudio={handleRemoveAudio}
+      />
+
+      {/* AI Explainer Video Generator Modal */}
+      <AiGeneratorModal
+        isOpen={isAiGeneratorOpen}
+        onClose={() => setIsAiGeneratorOpen(false)}
+        onApplyScenes={handleApplyAiScenes}
       />
     </div>
   );

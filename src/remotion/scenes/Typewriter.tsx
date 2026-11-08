@@ -26,12 +26,14 @@ export function Typewriter({
   const visibleText = text.slice(0, charCount);
   const showCursor = frame % 16 < 8;
 
-  const effectiveBg = backgroundColor ?? "#000000";
-  const effectiveText = textColor ?? (isColorDark(effectiveBg) ? "#FFFFFF" : "#000000");
+  const effectiveBg = backgroundColor === "transparent" ? "transparent" : (backgroundColor ?? "#000000");
+  const effectiveText = textColor ?? (isColorDark(effectiveBg === "transparent" ? "#000000" : effectiveBg) ? "#FFFFFF" : "#000000");
 
   return (
     <AbsoluteFill style={{ backgroundColor: effectiveBg }}>
-      <SceneBackground {...background} isDark={isColorDark(effectiveBg)} />
+      {background?.style && background.style !== "none" && (
+        <SceneBackground {...background} isDark={isColorDark(effectiveBg)} />
+      )}
       {stickers.map((sticker, i) => (
         <StickerBadge key={sticker.category} sticker={sticker} index={i} />
       ))}
